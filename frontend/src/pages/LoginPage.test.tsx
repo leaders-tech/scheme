@@ -66,13 +66,13 @@ describe("LoginPage", () => {
 
   it("redirects logged-in users away from login page", () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={["/login"]}>
         <AuthContext.Provider value={{ ...anonymousValue, user: adminUser }}>
           <LoginPage />
         </AuthContext.Provider>
       </MemoryRouter>,
     );
 
-    expect(screen.queryByText("Login")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Login" })).not.toBeInTheDocument();
   });
 });

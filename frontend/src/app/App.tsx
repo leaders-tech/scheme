@@ -1,54 +1,18 @@
 /*
-This file builds the main frontend layout, routes, and route guards.
-Edit this file when top-level pages, navigation, or auth guard behavior changes.
+This file builds the main frontend layout, routes, and auth guard behavior.
+Edit this file when top-level pages, navigation, or auth redirects change.
 Copy the route pattern here when you add another top-level page.
 */
 
-import { NavLink, Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth";
-import { HomePage } from "../pages/HomePage";
 import { LoginPage } from "../pages/LoginPage";
-import { DashboardPage } from "../pages/DashboardPage";
-import { AdminPage } from "../pages/AdminPage";
+import { WorkspacePage } from "../pages/WorkspacePage";
 
 function Layout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuth();
-
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-slate-200/70 bg-white/70 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
-          <div>
-            <h1 className="text-xl font-semibold text-slate-900">Template PWA</h1>
-            <p className="text-sm text-slate-600">Simple starter for school projects.</p>
-          </div>
-          <nav className="flex items-center gap-3 text-sm font-medium text-slate-700">
-            <NavLink className="rounded-full px-3 py-2 hover:bg-slate-100" to="/">
-              Home
-            </NavLink>
-            {user ? (
-              <>
-                <NavLink className="rounded-full px-3 py-2 hover:bg-slate-100" to="/dashboard">
-                  Dashboard
-                </NavLink>
-                {user.is_admin && (
-                  <NavLink className="rounded-full px-3 py-2 hover:bg-slate-100" to="/admin">
-                    Admin
-                  </NavLink>
-                )}
-                <button className="rounded-full bg-slate-900 px-4 py-2 text-white" onClick={() => void logout()}>
-                  Logout
-                </button>
-              </>
-            ) : (
-              <NavLink className="rounded-full bg-slate-900 px-4 py-2 text-white" to="/login">
-                Login
-              </NavLink>
-            )}
-          </nav>
-        </div>
-      </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+    <div className="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#eef6ff_100%)]">
+      <main className="mx-auto max-w-7xl px-4 py-8">{children}</main>
     </div>
   );
 }
@@ -64,45 +28,32 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function RequireAdmin({ children }: { children: React.ReactNode }) {
+function IndexRoute() {
   const { user, loading } = useAuth();
   if (loading) {
     return <p className="text-slate-600">Loading session...</p>;
   }
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  if (!user.is_admin) {
-    return <Navigate to="/dashboard" replace />;
-  }
-  return <>{children}</>;
+  return <Navigate replace to={user ? "/workspace" : "/login"} />;
 }
 
 export function App() {
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<IndexRoute />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
-          path="/dashboard"
+          path="/workspace"
           element={
             <RequireAuth>
-              <DashboardPage />
+              <WorkspacePage />
             </RequireAuth>
           }
         />
-        <Route
-          path="/admin"
-          element={
-            <RequireAdmin>
-              <AdminPage />
-            </RequireAdmin>
-          }
-        />
+        <Route path="*" element={<Navigate replace to="/" />} />
       </Routes>
     </Layout>
   );
 }
 
-export { RequireAdmin, RequireAuth };
+export { RequireAuth };

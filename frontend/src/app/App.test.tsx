@@ -7,12 +7,8 @@ Copy a test pattern here when you add another route or route guard.
 import "@testing-library/jest-dom/vitest";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("../pages/DashboardPage", () => ({
-  DashboardPage: () => <h2>Dashboard</h2>,
-}));
-
-vi.mock("../pages/AdminPage", () => ({
-  AdminPage: () => <h2>Admin page</h2>,
+vi.mock("../pages/WorkspacePage", () => ({
+  WorkspacePage: () => <h2>Workspace</h2>,
 }));
 
 import { render, screen } from "@testing-library/react";
@@ -49,12 +45,12 @@ function renderApp(path: string, user: User | null) {
 
 describe("App routes", () => {
   it("redirects anonymous users to login", () => {
-    renderApp("/dashboard", null);
+    renderApp("/workspace", null);
     expect(screen.getByRole("heading", { name: "Login" })).toBeInTheDocument();
   });
 
-  it("redirects normal users away from admin page", () => {
-    renderApp("/admin", userValue);
-    expect(screen.getByRole("heading", { name: "Dashboard" })).toBeInTheDocument();
+  it("sends logged-in users to the workspace from the root route", () => {
+    renderApp("/", userValue);
+    expect(screen.getByRole("heading", { name: "Workspace" })).toBeInTheDocument();
   });
 });

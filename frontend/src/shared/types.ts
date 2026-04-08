@@ -1,5 +1,5 @@
 /*
-This file keeps the small shared TypeScript types for users, notes, API results, and websocket messages.
+This file keeps the small shared TypeScript types for users, scheme files, and API results.
 Edit this file when backend JSON shapes or websocket message shapes change.
 Copy a type pattern here when you add another shared API or websocket type.
 */
@@ -12,12 +12,28 @@ export type User = {
   updated_at: string;
 };
 
-export type Note = {
+export type SchemeFile = {
   id: number;
   user_id: number;
-  text: string;
+  name: string;
+  content: string;
   created_at: string;
   updated_at: string;
+};
+
+export type SchemeDiagnostic = {
+  severity: "error";
+  message: string;
+  line: number;
+  column: number;
+};
+
+export type SchemeAnalysis = {
+  mainSchemeName: string | null;
+  inputs: string[];
+  outputs: string[];
+  diagnostics: SchemeDiagnostic[];
+  isValid: boolean;
 };
 
 export type ApiOk<T> = {
@@ -37,5 +53,4 @@ export type ApiResponse<T> = ApiOk<T> | ApiFail;
 
 export type WsMessage =
   | { type: "ws.ready"; user_id: number; connections: number }
-  | { type: "pong" }
-  | { type: "notes.changed"; note?: Note; note_id?: number };
+  | { type: "pong" };

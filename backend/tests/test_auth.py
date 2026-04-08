@@ -1,6 +1,6 @@
-"""Test backend auth flows, roles, cookies, and auth-related CORS behavior.
+"""Test backend auth flows, cookies, and auth-related CORS behavior.
 
-Edit this file when login, refresh, logout, or admin-access behavior changes.
+Edit this file when login, refresh, logout, or auth-adjacent route behavior changes.
 Copy a test pattern here when you add another auth rule or auth endpoint.
 """
 
@@ -49,7 +49,7 @@ async def test_login_invalid_credentials(client, create_user, auth_headers) -> N
 
 @pytest.mark.asyncio
 async def test_requires_auth(client) -> None:
-    response = await client.post("/notes/list", json={})
+    response = await client.post("/scheme-files/list", json={})
     assert response.status == 401
 
 
@@ -97,10 +97,14 @@ async def test_auth_error_keeps_cors_headers_for_localhost_origin(client) -> Non
 
 
 @pytest.mark.asyncio
-async def test_admin_forbidden_for_normal_user(client, create_user, auth_headers) -> None:
+async def test_write_route_rejects_wrong_origin(client, create_user, auth_headers) -> None:
     await create_user("user", "user")
     await login(client, "user", "user", auth_headers)
-    response = await client.post("/admin/users/list", json={})
+    response = await client.post(
+        "/scheme-files/create",
+        json={"name": "bad-origin", "content": ""},
+        headers={"Origin": "http://evil.example"},
+    )
     assert response.status == 403
 
 
@@ -110,8 +114,8 @@ async def test_non_json_write_request_returns_400(client, create_user, auth_head
     await login(client, "user", "user", auth_headers)
 
     response = await client.post(
-        "/notes/save",
-        data="text=bad",
+        "/scheme-files/create",
+        data="name=bad",
         headers={"Origin": "http://127.0.0.1:5173", "Content-Type": "application/x-www-form-urlencoded"},
     )
     assert response.status == 400

@@ -11,8 +11,10 @@ import { fileURLToPath } from "node:url";
 
 const frontendRoot = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(frontendRoot, "..");
-const backendUrl = "http://127.0.0.1:9010";
-const frontendUrl = "http://127.0.0.1:4173";
+const backendPort = 49010;
+const frontendPort = 49173;
+const backendUrl = `http://127.0.0.1:${backendPort}`;
+const frontendUrl = `http://127.0.0.1:${frontendPort}`;
 const dbPath = process.env.E2E_DB_PATH ?? path.join(os.tmpdir(), `templatepwa-e2e-${Date.now()}-${process.pid}.sqlite3`);
 const uvCacheDir = path.join(os.tmpdir(), "templatepwa-uv-cache");
 
@@ -26,11 +28,11 @@ export default defineConfig({
       command: "uv run python -m backend.main",
       cwd: repoRoot,
       url: `${backendUrl}/health`,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       env: {
         APP_MODE: "dev",
         APP_HOST: "127.0.0.1",
-        APP_PORT: "9010",
+        APP_PORT: String(backendPort),
         DB_PATH: dbPath,
         COOKIE_SECRET: "playwright-secret",
         FRONTEND_ORIGIN: frontendUrl,
@@ -38,10 +40,10 @@ export default defineConfig({
       },
     },
     {
-      command: "npm run dev -- --host 127.0.0.1 --port 4173",
+      command: `npm run dev -- --host 127.0.0.1 --port ${frontendPort}`,
       cwd: frontendRoot,
       url: frontendUrl,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       env: {
         VITE_BACKEND_URL: backendUrl,
       },
