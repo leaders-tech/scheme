@@ -17,7 +17,7 @@ export function LoginPage() {
   const [busy, setBusy] = useState(false);
 
   if (user) {
-    return <Navigate to="/workspace" replace />;
+    return <Navigate to="/sandbox" replace />;
   }
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -26,7 +26,7 @@ export function LoginPage() {
     setError("");
     try {
       await login(username, password);
-      navigate("/workspace");
+      navigate("/sandbox");
     } catch (submitError) {
       const message = submitError instanceof Error ? submitError.message : "Login failed.";
       setError(message);

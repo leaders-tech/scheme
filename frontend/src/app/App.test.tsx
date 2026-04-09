@@ -10,6 +10,12 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("../pages/WorkspacePage", () => ({
   WorkspacePage: () => <h2>Workspace</h2>,
 }));
+vi.mock("../pages/TasksPage", () => ({
+  TasksPage: () => <h2>Tasks page</h2>,
+}));
+vi.mock("../pages/AdminTasksPage", () => ({
+  AdminTasksPage: () => <h2>Admin tasks</h2>,
+}));
 
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
@@ -45,12 +51,17 @@ function renderApp(path: string, user: User | null) {
 
 describe("App routes", () => {
   it("redirects anonymous users to login", () => {
-    renderApp("/workspace", null);
+    renderApp("/sandbox", null);
     expect(screen.getByRole("heading", { name: "Login" })).toBeInTheDocument();
   });
 
   it("sends logged-in users to the workspace from the root route", () => {
     renderApp("/", userValue);
     expect(screen.getByRole("heading", { name: "Workspace" })).toBeInTheDocument();
+  });
+
+  it("shows public admin tasks page without login", () => {
+    renderApp("/admin/tasks", null);
+    expect(screen.getByRole("heading", { name: "Admin tasks" })).toBeInTheDocument();
   });
 });

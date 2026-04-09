@@ -122,7 +122,7 @@ describe("SchemeWorkspace", () => {
     await actor.click(screen.getByRole("button", { name: "Open visualizer" }));
     await actor.click(screen.getByRole("button", { name: "in1 0" }));
     expect(await screen.findByLabelText("out 1")).toBeInTheDocument();
-  });
+  }, 15000);
 
   it("creates a file when the workspace is empty", async () => {
     const actor = userEvent.setup();

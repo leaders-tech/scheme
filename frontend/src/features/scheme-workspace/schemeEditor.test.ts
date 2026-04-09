@@ -44,7 +44,7 @@ end
 
     const offset = source.indexOf("(a) \n") + 4;
     const labels = collectSchemeCompletions(source, offset).map((item) => item.label);
-    expect(labels).toEqual(expect.arrayContaining(["helper", "not", "and", "xor"]));
+    expect(labels).toEqual(expect.arrayContaining(["helper", "not", "and", "or"]));
   });
 
   it("suggests visible signals inside signal lists", () => {

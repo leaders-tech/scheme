@@ -103,7 +103,6 @@ const BUILTIN_ARITY: Record<string, { inputs: number; outputs: number }> = {
   not: { inputs: 1, outputs: 1 },
   and: { inputs: 2, outputs: 1 },
   or: { inputs: 2, outputs: 1 },
-  xor: { inputs: 2, outputs: 1 },
 };
 
 export const BUILTIN_SCHEME_NAMES = Object.freeze(Object.keys(BUILTIN_ARITY));
@@ -463,9 +462,6 @@ function runBuiltIn(name: string, inputValues: number[]): number[] {
   }
   if (name === "or") {
     return [inputValues[0] === 1 || inputValues[1] === 1 ? 1 : 0];
-  }
-  if (name === "xor") {
-    return [inputValues[0] === inputValues[1] ? 0 : 1];
   }
   throw new Error(`Unknown built-in ${name}`);
 }

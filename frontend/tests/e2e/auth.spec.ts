@@ -77,7 +77,34 @@ test("invalid scheme code shows detailed diagnostics", async ({ page }) => {
   await expect(page.getByText(/Expected ":"/)).toBeVisible();
 });
 
-test("anonymous user is redirected to login from workspace", async ({ page }) => {
-  await page.goto("/workspace");
+test("public admin can create task and student can submit it", async ({ page }) => {
+  await page.goto("/admin/tasks");
+  await page.getByLabel("Title").fill("XOR task");
+  await page.getByLabel("Statement markdown").fill("# XOR\nBuild xor.");
+  await page.getByLabel("Input count (N)").fill("2");
+  await page.getByLabel("Output count (M)").fill("1");
+  await page.getByLabel("Expected outputs (2^N lines of M bits)").fill("0\n1\n1\n0");
+  await page.getByRole("button", { name: "Save task" }).click();
+  await expect(page.getByText("Task saved.")).toBeVisible();
+
+  await page.goto("/login");
+  await page.getByLabel("Username").fill("user");
+  await page.getByLabel("Password").fill("user");
+  await page.getByRole("button", { name: "Login" }).click();
+  await waitForWorkspace(page);
+  await page.goto("/tasks");
+  await expect(page.getByRole("heading", { name: "XOR task" })).toBeVisible();
+
+  const editor = page.locator(".cm-content").first();
+  await editor.click();
+  await page.keyboard.type(
+    "scheme (a b) main (z):\n local x1 x2 x3\n (a b) or (x1)\n (a b) and (x2)\n (x2) not (x3)\n (x1 x3) and (z)\nend",
+  );
+  await page.getByRole("button", { name: "Submit" }).click();
+  await expect(page.getByText("Accepted.")).toBeVisible();
+});
+
+test("anonymous user is redirected to login from sandbox", async ({ page }) => {
+  await page.goto("/sandbox");
   await expect(page.getByRole("heading", { name: "Login" })).toBeVisible();
 });
