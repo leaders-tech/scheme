@@ -338,6 +338,89 @@ function collectNameDiagnostics(items: SignalRef[], scopeName: string, diagnosti
   }
 }
 
+function analyzeSignalFlow(scheme: SchemeNode, diagnostics: SchemeDiagnostic[]) {
+  const inputsByName = new Map(scheme.inputs.items.map((item) => [item.name, item]));
+  const outputsAndLocals = [...scheme.outputs.items, ...scheme.locals];
+  const writableByName = new Map(outputsAndLocals.map((item) => [item.name, item]));
+  const localsByName = new Map(scheme.locals.map((item) => [item.name, item]));
+  const refsByName = new Map([...scheme.inputs.items, ...scheme.outputs.items, ...scheme.locals].map((item) => [item.name, item]));
+  const producedSignals = new Map<string, SignalRef>();
+  const graph = new Map<string, Set<string>>();
+  const reportedCycles = new Set<string>();
+
+  for (const name of refsByName.keys()) {
+    graph.set(name, new Set<string>());
+  }
+
+  for (const statement of scheme.statements) {
+    for (const output of statement.outputs.items) {
+      if (writableByName.has(output.name)) {
+        const previousWrite = producedSignals.get(output.name);
+        if (previousWrite) {
+          diagnostics.push(diagnostic(`Signal "${output.name}" can only be written once in scheme "${scheme.name.name}".`, output));
+          continue;
+        }
+        producedSignals.set(output.name, output);
+      }
+
+      if (!graph.has(output.name)) {
+        continue;
+      }
+      for (const input of statement.inputs.items) {
+        if (!graph.has(input.name)) {
+          continue;
+        }
+        graph.get(input.name)!.add(output.name);
+      }
+    }
+  }
+
+  for (const statement of scheme.statements) {
+    for (const input of statement.inputs.items) {
+      if (localsByName.has(input.name) && !producedSignals.has(input.name)) {
+        diagnostics.push(
+          diagnostic(`Local signal "${input.name}" is used as an input, but no statement writes to it in scheme "${scheme.name.name}".`, input),
+        );
+      }
+    }
+  }
+
+  const visitState = new Map<string, "visiting" | "done">();
+  const stack: string[] = [];
+  const visit = (name: string) => {
+    const state = visitState.get(name);
+    if (state === "done") {
+      return;
+    }
+    if (state === "visiting") {
+      const cycleStart = stack.indexOf(name);
+      const cyclePath = [...stack.slice(cycleStart >= 0 ? cycleStart : 0), name];
+      const cycleKey = cyclePath.join(" -> ");
+      if (!reportedCycles.has(cycleKey)) {
+        reportedCycles.add(cycleKey);
+        diagnostics.push(
+          diagnostic(`Signal graph in scheme "${scheme.name.name}" must be acyclic. Cycle: ${cycleKey}.`, refsByName.get(name) ?? scheme.name),
+        );
+      }
+      return;
+    }
+
+    visitState.set(name, "visiting");
+    stack.push(name);
+    for (const next of graph.get(name) ?? []) {
+      visit(next);
+    }
+    stack.pop();
+    visitState.set(name, "done");
+  };
+
+  for (const name of refsByName.keys()) {
+    if (!inputsByName.has(name) || graph.get(name)?.size) {
+      visit(name);
+    }
+  }
+}
+
 function analyzeParsed(parsed: ParsedFile): AnalysisWithAst {
   const diagnostics: SchemeDiagnostic[] = [];
   if (parsed.schemes.length === 0) {
@@ -405,6 +488,8 @@ function analyzeParsed(parsed: ParsedFile): AnalysisWithAst {
         }
       }
     }
+
+    analyzeSignalFlow(scheme, diagnostics);
   }
 
   const visitState = new Map<string, "visiting" | "done">();
@@ -660,7 +745,13 @@ export function collectEditorSymbols(source: string, offset: number): EditorSymb
   const helperSchemeNames = schemes
     .map((scheme) => scheme.name)
     .filter((name, index, items) => name !== mainSchemeName && !BUILTIN_SCHEME_NAMES.includes(name) && items.indexOf(name) === index);
-  const activeScheme = schemes.find((scheme) => offset >= scheme.start && offset <= scheme.end) ?? null;
+  let activeScheme: EditorSchemeSymbols | null = null;
+  for (let index = schemes.length - 1; index >= 0; index -= 1) {
+    if (offset >= schemes[index].start && offset <= schemes[index].end) {
+      activeScheme = schemes[index];
+      break;
+    }
+  }
   const visibleSignals = activeScheme ? Array.from(new Set([...activeScheme.inputs, ...activeScheme.outputs, ...activeScheme.locals])) : [];
   return { helperSchemeNames, schemes, activeScheme, visibleSignals };
 }

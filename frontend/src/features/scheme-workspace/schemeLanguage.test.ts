@@ -75,6 +75,57 @@ end
     );
   });
 
+  it("reports duplicate writes to locals and outputs", () => {
+    const source = `
+scheme (x1 x2) main (out):
+ local temp
+ (x1 x2) and (temp)
+ (x1 x2) or (temp)
+ (x1) not (out)
+ (x2) not (out)
+end
+`;
+
+    const analysis = analyzeSchemeSource(source);
+    expect(analysis.isValid).toBe(false);
+    expect(analysis.diagnostics.map((item) => item.message)).toEqual(
+      expect.arrayContaining([
+        'Signal "temp" can only be written once in scheme "main".',
+        'Signal "out" can only be written once in scheme "main".',
+      ]),
+    );
+  });
+
+  it("reports local signals that are read without any writer", () => {
+    const source = `
+scheme (x) main (out):
+ local temp
+ (temp) not (out)
+end
+`;
+
+    const analysis = analyzeSchemeSource(source);
+    expect(analysis.isValid).toBe(false);
+    expect(analysis.diagnostics.map((item) => item.message)).toEqual(
+      expect.arrayContaining(['Local signal "temp" is used as an input, but no statement writes to it in scheme "main".']),
+    );
+  });
+
+  it("reports cycles in the signal graph", () => {
+    const source = `
+scheme (x) main (out):
+ local left right
+ (x right) and (left)
+ (left) not (right)
+ (left) not (out)
+end
+`;
+
+    const analysis = analyzeSchemeSource(source);
+    expect(analysis.isValid).toBe(false);
+    expect(analysis.diagnostics.some((item) => item.message.includes('Signal graph in scheme "main" must be acyclic.'))).toBe(true);
+  });
+
   it("collects helper names and visible signals for editor tooling", () => {
     const source = `
 scheme (x1 x2) xor2 (out):

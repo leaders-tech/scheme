@@ -17,6 +17,30 @@ vi.mock("../../shared/api", () => ({
 }));
 
 describe("AdminTasksWorkspace", () => {
+  it("waits for the initial load before showing the form", async () => {
+    let resolveList: ((value: { tasks: [] }) => void) | null = null;
+    postJson.mockImplementation(
+      (path: string) =>
+        new Promise((resolve) => {
+          if (path === "/admin/tasks/list") {
+            resolveList = resolve as (value: { tasks: [] }) => void;
+            return;
+          }
+          throw new Error(`Unexpected path ${path}`);
+        }),
+    );
+
+    render(<AdminTasksWorkspace />);
+
+    expect(await screen.findByRole("heading", { name: "Loading tasks" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Title")).not.toBeInTheDocument();
+
+    resolveList?.({ tasks: [] });
+
+    expect(await screen.findByRole("heading", { name: "Create task" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Title")).toBeInTheDocument();
+  });
+
   it("creates a task through admin endpoint", async () => {
     postJson.mockImplementation(async (path: string, body?: unknown) => {
       if (path === "/admin/tasks/list") {

@@ -77,6 +77,36 @@ test("invalid scheme code shows detailed diagnostics", async ({ page }) => {
   await expect(page.getByText(/Expected ":"/)).toBeVisible();
 });
 
+test("scheme editor accepts completions with Tab and keeps Enter for new lines", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByLabel("Username").fill("user");
+  await page.getByLabel("Password").fill("user");
+  await page.getByRole("button", { name: "Login" }).click();
+  await ensureOpenFile(page);
+
+  const editor = page.locator(".cm-content").first();
+  await editor.click();
+  await page.keyboard.press(process.platform === "darwin" ? "Meta+A" : "Control+A");
+  await page.keyboard.type("sc");
+  const autocomplete = page.locator(".cm-tooltip-autocomplete");
+  await expect(autocomplete).toContainText("scheme");
+
+  await page.keyboard.press("Tab");
+  await expect(editor).toContainText("scheme");
+
+  await page.keyboard.press("Space");
+  await expect(autocomplete).toContainText("Start the input signal list");
+  await page.keyboard.press("Tab");
+  await expect(editor).toContainText("scheme (");
+
+  await page.keyboard.type("x1 x2) mod3 (out):");
+  await page.keyboard.press("Enter");
+
+  const content = await editor.innerText();
+  expect(content).toContain("scheme (x1 x2) mod3 (out):\n");
+  expect(content).not.toContain("scheme (x1 x2) mod3 (out):and");
+});
+
 test("public admin can create task and student can submit it", async ({ page }) => {
   await page.goto("/admin/tasks");
   await page.getByLabel("Title").fill("XOR task");

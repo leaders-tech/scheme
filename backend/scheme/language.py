@@ -248,6 +248,79 @@ def collect_name_diagnostics(items: list[SignalRef], scope_name: str, diagnostic
         seen[item.name] = item
 
 
+def analyze_signal_flow(scheme: SchemeNode, diagnostics: list[SchemeDiagnostic]) -> None:
+    outputs_and_locals = [*scheme.outputs.items, *scheme.locals]
+    writable: dict[str, SignalRef] = {item.name: item for item in outputs_and_locals}
+    locals_by_name: dict[str, SignalRef] = {item.name: item for item in scheme.locals}
+    refs_by_name: dict[str, SignalRef] = {item.name: item for item in [*scheme.inputs.items, *scheme.outputs.items, *scheme.locals]}
+    produced: dict[str, SignalRef] = {}
+    graph: dict[str, set[str]] = {name: set() for name in refs_by_name}
+    reported_cycles: set[str] = set()
+
+    for statement in scheme.statements:
+        for output in statement.outputs.items:
+            if output.name in writable:
+                if output.name in produced:
+                    diagnostics.append(
+                        SchemeDiagnostic(
+                            line=output.line,
+                            column=output.column,
+                            message=f'Signal "{output.name}" can only be written once in scheme "{scheme.name.name}".',
+                        )
+                    )
+                    continue
+                produced[output.name] = output
+
+            if output.name not in graph:
+                continue
+            for input_signal in statement.inputs.items:
+                if input_signal.name in graph:
+                    graph[input_signal.name].add(output.name)
+
+    for statement in scheme.statements:
+        for input_signal in statement.inputs.items:
+            if input_signal.name in locals_by_name and input_signal.name not in produced:
+                diagnostics.append(
+                    SchemeDiagnostic(
+                        line=input_signal.line,
+                        column=input_signal.column,
+                        message=f'Local signal "{input_signal.name}" is used as an input, but no statement writes to it in scheme "{scheme.name.name}".',
+                    )
+                )
+
+    visit_state: dict[str, str] = {}
+    stack: list[str] = []
+
+    def visit(name: str) -> None:
+        state = visit_state.get(name)
+        if state == "done":
+            return
+        if state == "visiting":
+            cycle_start = stack.index(name) if name in stack else 0
+            cycle_path = [*stack[cycle_start:], name]
+            cycle_key = " -> ".join(cycle_path)
+            if cycle_key not in reported_cycles:
+                reported_cycles.add(cycle_key)
+                reference = refs_by_name.get(name, scheme.name)
+                diagnostics.append(
+                    SchemeDiagnostic(
+                        line=reference.line,
+                        column=reference.column,
+                        message=f'Signal graph in scheme "{scheme.name.name}" must be acyclic. Cycle: {cycle_key}.',
+                    )
+                )
+            return
+        visit_state[name] = "visiting"
+        stack.append(name)
+        for next_name in graph.get(name, set()):
+            visit(next_name)
+        stack.pop()
+        visit_state[name] = "done"
+
+    for name in refs_by_name:
+        visit(name)
+
+
 def analyze_program(parsed: ParsedProgram) -> list[SchemeDiagnostic]:
     diagnostics: list[SchemeDiagnostic] = []
     if not parsed.schemes:
@@ -330,6 +403,8 @@ def analyze_program(parsed: ParsedProgram) -> list[SchemeDiagnostic]:
                             message=f'Signal "{signal.name}" is not declared in scheme "{scheme.name.name}".',
                         )
                     )
+
+        analyze_signal_flow(scheme, diagnostics)
 
     visit_state: dict[str, str] = {}
     stack: list[str] = []

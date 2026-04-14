@@ -31,7 +31,14 @@ scheme (x) main (out):
     expect(tokens.find((token) => token.text === "(")?.kind).toBe("punctuation");
   });
 
-  it("suggests built-ins and helper schemes after an input list", () => {
+  it("suggests only an opening parenthesis after the scheme keyword", () => {
+    const source = "scheme ";
+
+    const labels = collectSchemeCompletions(source, source.length).map((item) => item.label);
+    expect(labels).toEqual(["("]);
+  });
+
+  it("suggests built-ins and helper schemes after a statement input list", () => {
     const source = `
 scheme (x) helper (y):
  (x) not (y)
@@ -47,7 +54,17 @@ end
     expect(labels).toEqual(expect.arrayContaining(["helper", "not", "and", "or"]));
   });
 
-  it("suggests visible signals inside signal lists", () => {
+  it("suggests only structure tokens after a scheme header", () => {
+    const source = `
+scheme (x1 x2) mod3 (out):
+`;
+
+    const labels = collectSchemeCompletions(source, source.length).map((item) => item.label);
+    expect(labels).toEqual(expect.arrayContaining(["(", "end", "local"]));
+    expect(labels).not.toEqual(expect.arrayContaining(["and", "or", "not"]));
+  });
+
+  it("suggests visible signals inside statement input lists", () => {
     const source = `
 scheme (left right) main (out):
  local mid
@@ -55,12 +72,26 @@ scheme (left right) main (out):
 end
 `;
 
-    const offset = source.indexOf("(le") + 3;
+    const offset = source.lastIndexOf("(le") + 3;
     const labels = collectSchemeCompletions(source, offset).map((item) => item.label);
     expect(labels).toEqual(expect.arrayContaining(["left", "right", "out", "mid"]));
   });
 
-  it("still suggests keywords and helpers on a broken file", () => {
+  it("suggests only writable signals inside statement output lists", () => {
+    const source = `
+scheme (left right) main (out):
+ local mid
+ (left right) and (
+end
+`;
+
+    const offset = source.indexOf("and (") + 5;
+    const labels = collectSchemeCompletions(source, offset).map((item) => item.label);
+    expect(labels).toEqual(expect.arrayContaining(["out", "mid"]));
+    expect(labels).not.toEqual(expect.arrayContaining(["left", "right"]));
+  });
+
+  it("still suggests structure tokens on a broken file", () => {
     const source = `
 scheme (x) helper (y):
 
@@ -68,6 +99,6 @@ scheme (a) main (out):
 `;
 
     const labels = collectSchemeCompletions(source, source.length).map((item) => item.label);
-    expect(labels).toEqual(expect.arrayContaining(["helper", "local", "end"]));
+    expect(labels).toEqual(expect.arrayContaining(["(", "local", "end"]));
   });
 });

@@ -225,76 +225,85 @@ export function AdminTasksWorkspace() {
       </aside>
 
       <div className="rounded-3xl border border-slate-200/80 bg-white/90 p-5 shadow-lg shadow-slate-200/60">
-        <h2 className="text-2xl font-semibold text-slate-900">{activeTaskId === null ? "Create task" : `Edit task #${activeTaskId}`}</h2>
-        <div className="mt-5 grid gap-4">
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Title
-            <input
-              className="rounded-2xl border border-slate-300 px-3 py-2"
-              onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
-              value={form.title}
-            />
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Statement markdown
-            <textarea
-              className="min-h-40 rounded-2xl border border-slate-300 px-3 py-2 font-mono text-sm"
-              onChange={(event) => setForm((current) => ({ ...current, statement_markdown: event.target.value }))}
-              value={form.statement_markdown}
-            />
-          </label>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-2 text-sm font-medium text-slate-700">
-              Input count (N)
-              <input
-                className="rounded-2xl border border-slate-300 px-3 py-2"
-                onChange={(event) => setForm((current) => ({ ...current, input_count: event.target.value }))}
-                value={form.input_count}
-              />
-            </label>
-            <label className="grid gap-2 text-sm font-medium text-slate-700">
-              Output count (M)
-              <input
-                className="rounded-2xl border border-slate-300 px-3 py-2"
-                onChange={(event) => setForm((current) => ({ ...current, output_count: event.target.value }))}
-                value={form.output_count}
-              />
-            </label>
-          </div>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Expected outputs (2^N lines of M bits)
-            <textarea
-              className="min-h-40 rounded-2xl border border-slate-300 px-3 py-2 font-mono text-sm"
-              onChange={(event) => setForm((current) => ({ ...current, expected_outputs_text: event.target.value }))}
-              placeholder={"Example for N=2, M=1:\n0\n1\n1\n0"}
-              value={form.expected_outputs_text}
-            />
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Reference solution (scheme)
-            <textarea
-              className="min-h-48 rounded-2xl border border-slate-300 px-3 py-2 font-mono text-sm"
-              onChange={(event) => setForm((current) => ({ ...current, reference_solution: event.target.value }))}
-              value={form.reference_solution}
-            />
-          </label>
-        </div>
-        <div className="mt-5 flex flex-wrap gap-3">
-          <button
-            className="rounded-2xl bg-sky-600 px-4 py-3 font-semibold text-white disabled:opacity-60"
-            disabled={saveState === "saving"}
-            onClick={() => void saveTask()}
-            type="button"
-          >
-            {saveState === "saving" ? "Saving..." : "Save task"}
-          </button>
-          <button className="rounded-2xl border border-rose-300 px-4 py-3 font-semibold text-rose-700" disabled={activeTaskId === null} onClick={() => void deleteTask()} type="button">
-            Delete task
-          </button>
-        </div>
-        {validationError ? <p className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-700">{validationError}</p> : null}
-        {saveError ? <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{saveError}</p> : null}
-        {saveState === "saved" ? <p className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">Task saved.</p> : null}
+        {loading ? (
+          <>
+            <h2 className="text-2xl font-semibold text-slate-900">Loading tasks</h2>
+            <p className="mt-4 text-sm text-slate-600">Wait for the task editor to finish loading before you start typing.</p>
+          </>
+        ) : (
+          <>
+            <h2 className="text-2xl font-semibold text-slate-900">{activeTaskId === null ? "Create task" : `Edit task #${activeTaskId}`}</h2>
+            <div className="mt-5 grid gap-4">
+              <label className="grid gap-2 text-sm font-medium text-slate-700">
+                Title
+                <input
+                  className="rounded-2xl border border-slate-300 px-3 py-2"
+                  onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
+                  value={form.title}
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-medium text-slate-700">
+                Statement markdown
+                <textarea
+                  className="min-h-40 rounded-2xl border border-slate-300 px-3 py-2 font-mono text-sm"
+                  onChange={(event) => setForm((current) => ({ ...current, statement_markdown: event.target.value }))}
+                  value={form.statement_markdown}
+                />
+              </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-2 text-sm font-medium text-slate-700">
+                  Input count (N)
+                  <input
+                    className="rounded-2xl border border-slate-300 px-3 py-2"
+                    onChange={(event) => setForm((current) => ({ ...current, input_count: event.target.value }))}
+                    value={form.input_count}
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-slate-700">
+                  Output count (M)
+                  <input
+                    className="rounded-2xl border border-slate-300 px-3 py-2"
+                    onChange={(event) => setForm((current) => ({ ...current, output_count: event.target.value }))}
+                    value={form.output_count}
+                  />
+                </label>
+              </div>
+              <label className="grid gap-2 text-sm font-medium text-slate-700">
+                Expected outputs (2^N lines of M bits)
+                <textarea
+                  className="min-h-40 rounded-2xl border border-slate-300 px-3 py-2 font-mono text-sm"
+                  onChange={(event) => setForm((current) => ({ ...current, expected_outputs_text: event.target.value }))}
+                  placeholder={"Example for N=2, M=1:\n0\n1\n1\n0"}
+                  value={form.expected_outputs_text}
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-medium text-slate-700">
+                Reference solution (scheme)
+                <textarea
+                  className="min-h-48 rounded-2xl border border-slate-300 px-3 py-2 font-mono text-sm"
+                  onChange={(event) => setForm((current) => ({ ...current, reference_solution: event.target.value }))}
+                  value={form.reference_solution}
+                />
+              </label>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button
+                className="rounded-2xl bg-sky-600 px-4 py-3 font-semibold text-white disabled:opacity-60"
+                disabled={saveState === "saving"}
+                onClick={() => void saveTask()}
+                type="button"
+              >
+                {saveState === "saving" ? "Saving..." : "Save task"}
+              </button>
+              <button className="rounded-2xl border border-rose-300 px-4 py-3 font-semibold text-rose-700" disabled={activeTaskId === null} onClick={() => void deleteTask()} type="button">
+                Delete task
+              </button>
+            </div>
+            {validationError ? <p className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-700">{validationError}</p> : null}
+            {saveError ? <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{saveError}</p> : null}
+            {saveState === "saved" ? <p className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">Task saved.</p> : null}
+          </>
+        )}
       </div>
     </section>
   );
