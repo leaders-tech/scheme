@@ -34,6 +34,14 @@ const user: User = {
   updated_at: "2026-04-01T10:00:00+00:00",
 };
 
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((nextResolve) => {
+    resolve = nextResolve;
+  });
+  return { promise, resolve };
+}
+
 function renderWorkspace(files: SchemeFile[]) {
   postJson.mockImplementation(async (path: string, body?: unknown) => {
     if (path === "/scheme-files/list") {
@@ -155,5 +163,85 @@ describe("SchemeWorkspace", () => {
     );
     const latestProps = codeMirrorProps.mock.calls.at(-1)?.[0] as { extensions?: unknown[] } | undefined;
     expect(latestProps?.extensions?.length).toBeGreaterThan(0);
+  });
+
+  it("keeps newer editor content when an older save response arrives late", async () => {
+    const startingFile: SchemeFile = {
+      id: 1,
+      user_id: 1,
+      name: "scheme 1",
+      content: "scheme () main ():\nend",
+      created_at: "2026-04-01T10:00:00+00:00",
+      updated_at: "2026-04-01T10:00:00+00:00",
+    };
+    const saveResponses = [createDeferred<{ file: SchemeFile }>(), createDeferred<{ file: SchemeFile }>()];
+    const savePayloads: Array<{ id: number; name: string; content: string }> = [];
+
+    postJson.mockImplementation(async (path: string, body?: unknown) => {
+      if (path === "/scheme-files/list") {
+        return { files: [startingFile] };
+      }
+      if (path === "/scheme-files/save") {
+        savePayloads.push(body as { id: number; name: string; content: string });
+        return saveResponses[savePayloads.length - 1].promise;
+      }
+      throw new Error(`Unexpected path ${path}`);
+    });
+
+    render(<SchemeWorkspace onLogout={vi.fn()} user={user} />);
+    await screen.findByRole("heading", { name: "scheme 1" });
+
+    const firstContent = "scheme () main (out):\nend";
+    const secondContent = "scheme () main (out):\n local temp\nend";
+
+    await act(async () => {
+      const latestProps = codeMirrorProps.mock.calls.at(-1)?.[0] as { onChange: (value: string) => void };
+      latestProps.onChange(firstContent);
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => window.setTimeout(resolve, 650));
+    });
+    await waitFor(() => {
+      expect(savePayloads).toHaveLength(1);
+    });
+
+    await act(async () => {
+      const latestProps = codeMirrorProps.mock.calls.at(-1)?.[0] as { onChange: (value: string) => void };
+      latestProps.onChange(secondContent);
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => window.setTimeout(resolve, 650));
+    });
+    await waitFor(() => {
+      expect(savePayloads).toHaveLength(2);
+    });
+
+    await act(async () => {
+      saveResponses[1].resolve({
+        file: {
+          ...startingFile,
+          content: secondContent,
+          updated_at: "2026-04-01T10:06:00+00:00",
+        },
+      });
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      saveResponses[0].resolve({
+        file: {
+          ...startingFile,
+          content: firstContent,
+          updated_at: "2026-04-01T10:05:00+00:00",
+        },
+      });
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Code editor")).toHaveValue(secondContent);
+    });
   });
 });

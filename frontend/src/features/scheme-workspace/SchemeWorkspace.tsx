@@ -42,6 +42,7 @@ export function SchemeWorkspace({ user, onLogout }: { user: User; onLogout: () =
   const [visualizerOpen, setVisualizerOpen] = useState(false);
   const [inputState, setInputState] = useState<Record<string, 0 | 1>>({});
   const lastSavedSnapshots = useRef<Record<number, string>>({});
+  const latestSaveRequestIds = useRef<Record<number, number>>({});
 
   const activeFile = files.find((file) => file.id === activeFileId) ?? null;
   const analysis = useMemo(() => analyzeSchemeSource(activeFile?.content ?? ""), [activeFile?.content]);
@@ -60,6 +61,8 @@ export function SchemeWorkspace({ user, onLogout }: { user: User; onLogout: () =
     if (lastSavedSnapshots.current[file.id] === snapshot) {
       return;
     }
+    const requestId = (latestSaveRequestIds.current[file.id] ?? 0) + 1;
+    latestSaveRequestIds.current[file.id] = requestId;
     setSaveState("saving");
     setSaveError("");
     try {
@@ -68,10 +71,30 @@ export function SchemeWorkspace({ user, onLogout }: { user: User; onLogout: () =
         name: file.name,
         content: file.content,
       });
-      lastSavedSnapshots.current[data.file.id] = buildSnapshot(data.file);
-      setFiles((current) => current.map((item) => (item.id === data.file.id ? data.file : item)));
-      setSaveState("saved");
+      if ((latestSaveRequestIds.current[data.file.id] ?? 0) !== requestId) {
+        return;
+      }
+
+      const responseSnapshot = buildSnapshot(data.file);
+      let currentFileChanged = false;
+      setFiles((current) =>
+        current.map((item) => {
+          if (item.id !== data.file.id) {
+            return item;
+          }
+          if (buildSnapshot(item) !== snapshot) {
+            currentFileChanged = true;
+            return item;
+          }
+          return data.file;
+        }),
+      );
+      lastSavedSnapshots.current[data.file.id] = responseSnapshot;
+      setSaveState(currentFileChanged ? "idle" : "saved");
     } catch (error) {
+      if ((latestSaveRequestIds.current[file.id] ?? 0) !== requestId) {
+        return;
+      }
       setSaveState("error");
       setSaveError(error instanceof Error ? error.message : "Could not save file.");
     }
