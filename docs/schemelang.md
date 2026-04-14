@@ -277,14 +277,6 @@ local a1 a2 a3 a4 a5 a6 a7 a8
 
 ## 8. Встроенные и библиотечные имена, видимые в примерах
 
-По примерам регулярно встречаются такие базовые имена:
-
-- `and`
-- `or`
-- `not`
-- `zero`
-- `one`
-
 Предопределёнными схемами языка следует считать:
 
 - `zero`
@@ -294,19 +286,6 @@ local a1 a2 a3 a4 a5 a6 a7 a8
 - `or`
 
 Схема `xor` в язык не встроена. Если она нужна, её сначала надо явно описать как обычную пользовательскую схему, а затем вызывать по имени.
-
-Также часто встречаются пользовательские схемы:
-
-- `or3`, `or4`, `and3`
-- `xor`, `xor2`
-- `mod2`, `mod3`
-- `cmp1`, `cmp2`, `cmp4`, `cmp5`
-- `eq1`, `eq2`, `eq5`
-- `add2`, `add4`
-- `sort2`, `sort8`
-- `shift_right`
-- `div`
-- `mult`
 
 Синтаксически между встроенными и пользовательскими схемами разницы не видно: обе вызываются одинаково.
 
@@ -511,11 +490,11 @@ end
 Ниже удобная EBNF-запись именно того синтаксиса, который подтверждён примерами.
 
 ```ebnf
-file            = { scheme_def } ;
+file            = scheme_def { scheme_def } ;
 
-scheme_def      = "scheme" ws? signal_list ws+ scheme_name ws+ signal_list ":" 
+scheme_def      = "scheme" ws* signal_list ws* scheme_name ws* signal_list ws* ":" 
                   ws* [ local_section ] { statement }
-                  "end" ;
+                  ws* "end" ;
 
 local_section   = "local" ws+ identifier { ws+ identifier } ws* ;
 
@@ -528,6 +507,15 @@ scheme_name     = identifier ;
 identifier      = ident_char { ident_char } ;
 
 ident_char      = letter | digit | "_" ;
+
+ws              = " " | "\t" | "\n" | "\r" ;
+
+letter          = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" 
+                | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" 
+                | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" 
+                | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" ;
+
+digit           = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 ```
 
 Практическое уточнение к этой EBNF:
