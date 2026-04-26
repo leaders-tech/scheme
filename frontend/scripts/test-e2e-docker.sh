@@ -9,7 +9,7 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 FRONTEND_DIR=$(CDPATH= cd -- "${SCRIPT_DIR}/.." && pwd)
 REPO_DIR=$(CDPATH= cd -- "${FRONTEND_DIR}/.." && pwd)
 COMPOSE_SCRIPT="${REPO_DIR}/scripts/docker-compose.sh"
-PROJECT_NAME="${PW_DOCKER_PROJECT_NAME:-templatepwa_e2e}"
+PROJECT_NAME="${PW_DOCKER_PROJECT_NAME:-schemes_e2e}"
 
 find_free_ports() {
   python3 -c 'import socket; sockets = []; ports = []; 

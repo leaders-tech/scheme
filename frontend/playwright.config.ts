@@ -15,8 +15,8 @@ const backendPort = 49010;
 const frontendPort = 49173;
 const backendUrl = `http://127.0.0.1:${backendPort}`;
 const frontendUrl = `http://127.0.0.1:${frontendPort}`;
-const dbPath = process.env.E2E_DB_PATH ?? path.join(os.tmpdir(), `templatepwa-e2e-${Date.now()}-${process.pid}.sqlite3`);
-const uvCacheDir = path.join(os.tmpdir(), "templatepwa-uv-cache");
+const dbPath = process.env.E2E_DB_PATH ?? path.join(os.tmpdir(), `schemes-e2e-${Date.now()}-${process.pid}.sqlite3`);
+const uvCacheDir = path.join(os.tmpdir(), "schemes-uv-cache");
 
 export default defineConfig({
   testDir: "./tests/e2e",

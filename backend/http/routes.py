@@ -16,8 +16,11 @@ from backend.db.tasks import (
     delete_task,
     get_task_for_admin,
     get_task_for_student,
+    get_task_progress,
     list_tasks_for_admin,
     list_tasks_for_student,
+    record_task_submission,
+    save_task_draft,
     save_task,
 )
 from backend.http.json_api import AppError, ok, read_json
@@ -112,26 +115,42 @@ def read_task_payload(payload: dict[str, object]) -> TaskPayload:
 
 
 async def tasks_list(request: web.Request) -> web.Response:
-    require_user(request)
-    tasks = await list_tasks_for_student(request.app["db"])
+    user = require_user(request)
+    tasks = await list_tasks_for_student(request.app["db"], int(user["id"]))
     return ok({"tasks": tasks})
 
 
 async def tasks_get(request: web.Request) -> web.Response:
-    require_user(request)
+    user = require_user(request)
     payload = await read_json(request)
     task_id = payload.get("id")
     if not isinstance(task_id, int):
         raise AppError(400, "bad_request", "Task id must be an integer.")
-    task = await get_task_for_student(request.app["db"], task_id)
+    task = await get_task_for_student(request.app["db"], int(user["id"]), task_id)
     if task is None:
         raise AppError(404, "not_found", "Task does not exist.")
-    return ok({"task": task})
+    progress = await get_task_progress(request.app["db"], int(user["id"]), task_id)
+    return ok({"task": task, "progress": progress})
+
+
+async def tasks_save_draft(request: web.Request) -> web.Response:
+    require_allowed_origin(request)
+    user = require_user(request)
+    payload = await read_json(request)
+    task_id = payload.get("task_id")
+    solution = str(payload.get("solution", ""))
+    if not isinstance(task_id, int):
+        raise AppError(400, "bad_request", "Task id must be an integer.")
+    task = await get_task_for_student(request.app["db"], int(user["id"]), task_id)
+    if task is None:
+        raise AppError(404, "not_found", "Task does not exist.")
+    progress = await save_task_draft(request.app["db"], int(user["id"]), task_id, solution)
+    return ok({"progress": progress})
 
 
 async def tasks_submit(request: web.Request) -> web.Response:
     require_allowed_origin(request)
-    require_user(request)
+    user = require_user(request)
     payload = await read_json(request)
     task_id = payload.get("task_id")
     solution = str(payload.get("solution", ""))
@@ -150,7 +169,9 @@ async def tasks_submit(request: web.Request) -> web.Response:
         )
     except ValueError as error:
         raise AppError(400, "bad_request", str(error)) from error
-    return ok({"result": result.as_dict()})
+    result_dict = result.as_dict()
+    progress = await record_task_submission(request.app["db"], int(user["id"]), task_id, solution, result_dict)
+    return ok({"result": result_dict, "progress": progress})
 
 
 async def admin_tasks_list(request: web.Request) -> web.Response:
@@ -199,6 +220,7 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_post("/scheme-files/delete", scheme_files_delete)
     app.router.add_post("/tasks/list", tasks_list)
     app.router.add_post("/tasks/get", tasks_get)
+    app.router.add_post("/tasks/save-draft", tasks_save_draft)
     app.router.add_post("/tasks/submit", tasks_submit)
     app.router.add_post("/admin/tasks/list", admin_tasks_list)
     app.router.add_post("/admin/tasks/create", admin_tasks_create)

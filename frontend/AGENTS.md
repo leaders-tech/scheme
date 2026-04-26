@@ -5,7 +5,7 @@
 - Use plain React state and small hooks. Do not add state managers (no Redux, Zustand, Jotai, etc.).
 - Do not add a UI component library (no MUI, Ant Design, etc.). Tailwind CSS is already here.
 - Keep all user-facing text in simple English.
-- Keep browser API calls POST-based in this template — that is a deliberate teaching choice.
+- Keep browser API calls POST-based in this project — that is a deliberate teaching choice.
 
 ## File layout
 

@@ -129,6 +129,9 @@ export function AdminTasksWorkspace() {
   };
 
   const createTask = async () => {
+    if (loading) {
+      return;
+    }
     setActiveTaskId(null);
     setForm(emptyForm());
     setSaveError("");
@@ -199,7 +202,7 @@ export function AdminTasksWorkspace() {
           </div>
         </div>
         <div className="mt-5">
-          <button className="w-full rounded-2xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white" onClick={() => void createTask()} type="button">
+          <button className="w-full rounded-2xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60" disabled={loading} onClick={() => void createTask()} type="button">
             New task
           </button>
         </div>

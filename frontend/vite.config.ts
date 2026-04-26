@@ -16,9 +16,9 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "Template PWA",
-        short_name: "TemplatePWA",
-        description: "Small starter app for school projects.",
+        name: "Schemes",
+        short_name: "Schemes",
+        description: "Small app for learning simple logic schemes.",
         theme_color: "#0e1a2b",
         background_color: "#eff6ff",
         display: "standalone",

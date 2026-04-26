@@ -11,6 +11,15 @@ import pytest
 from backend.tests.conftest import login
 
 
+BEGINNER_TITLES = [
+    "1. Build OR for Three Inputs",
+    "2. Build OR for Four Inputs",
+    "3. Build a Majority-of-Three Circuit",
+    "4. Build XOR for Two Inputs",
+    "5. Build Odd Parity for Four Inputs",
+]
+
+
 def xor_reference_solution() -> str:
     return "\n".join(
         [
@@ -26,7 +35,36 @@ def xor_reference_solution() -> str:
 
 
 @pytest.mark.asyncio
-async def test_admin_tasks_crud(client, auth_headers) -> None:
+async def test_seeded_beginner_tasks_are_available_in_order(client, db, create_user, auth_headers) -> None:
+    admin_list_response = await client.post("/admin/tasks/list", json={})
+    assert admin_list_response.status == 200
+    admin_tasks = (await admin_list_response.json())["data"]["tasks"]
+
+    assert [item["title"] for item in admin_tasks[:5]] == BEGINNER_TITLES
+    assert admin_tasks[0]["input_count"] == 3
+    assert admin_tasks[0]["output_count"] == 1
+    assert admin_tasks[0]["expected_outputs_text"] == "0\n1\n1\n1\n1\n1\n1\n1"
+    assert admin_tasks[0]["reference_solution"]
+
+    cursor = await db.execute(
+        "SELECT title, sort_index FROM tasks WHERE sort_index <= 5 ORDER BY sort_index, id"
+    )
+    seeded_rows = await cursor.fetchall()
+    assert [(row["title"], row["sort_index"]) for row in seeded_rows] == list(zip(BEGINNER_TITLES, [1, 2, 3, 4, 5], strict=False))
+
+    await create_user("user", "user")
+    await login(client, "user", "user", auth_headers)
+    student_list_response = await client.post("/tasks/list", json={}, headers=auth_headers)
+    assert student_list_response.status == 200
+    student_tasks = (await student_list_response.json())["data"]["tasks"]
+    assert [item["title"] for item in student_tasks[:5]] == BEGINNER_TITLES
+
+
+@pytest.mark.asyncio
+async def test_admin_tasks_crud(client, db, auth_headers) -> None:
+    cursor = await db.execute("SELECT MAX(sort_index) AS max_sort_index FROM tasks")
+    initial_max_sort_index = int((await cursor.fetchone())["max_sort_index"])
+
     create_response = await client.post(
         "/admin/tasks/create",
         json={
@@ -45,7 +83,12 @@ async def test_admin_tasks_crud(client, auth_headers) -> None:
     list_response = await client.post("/admin/tasks/list", json={})
     assert list_response.status == 200
     tasks = (await list_response.json())["data"]["tasks"]
-    assert [item["title"] for item in tasks] == ["XOR"]
+    assert [item["title"] for item in tasks[:5]] == BEGINNER_TITLES
+    assert tasks[-1]["title"] == "XOR"
+
+    cursor = await db.execute("SELECT sort_index FROM tasks WHERE id = ?", (created["id"],))
+    created_sort_index = int((await cursor.fetchone())["sort_index"])
+    assert created_sort_index == initial_max_sort_index + 1
 
     save_response = await client.post(
         "/admin/tasks/save",
@@ -210,6 +253,100 @@ async def test_student_submit_returns_diagnostics_for_invalid_code(client, creat
 
 
 @pytest.mark.asyncio
+async def test_student_task_draft_persists_for_same_user_only(client, create_user, auth_headers) -> None:
+    await create_user("user", "user")
+    await create_user("other", "other")
+    await login(client, "user", "user", auth_headers)
+
+    list_response = await client.post("/tasks/list", json={}, headers=auth_headers)
+    task = (await list_response.json())["data"]["tasks"][0]
+    draft = "scheme (a b c) main (out):\nend"
+
+    save_response = await client.post(
+        "/tasks/save-draft",
+        json={"task_id": task["id"], "solution": draft},
+        headers=auth_headers,
+    )
+    assert save_response.status == 200
+    assert (await save_response.json())["data"]["progress"]["draft_solution"] == draft
+
+    get_response = await client.post("/tasks/get", json={"id": task["id"]}, headers=auth_headers)
+    assert get_response.status == 200
+    assert (await get_response.json())["data"]["progress"]["draft_solution"] == draft
+
+    await login(client, "other", "other", auth_headers)
+    other_get_response = await client.post("/tasks/get", json={"id": task["id"]}, headers=auth_headers)
+    assert other_get_response.status == 200
+    assert (await other_get_response.json())["data"]["progress"]["draft_solution"] == ""
+
+
+@pytest.mark.asyncio
+async def test_student_submissions_are_saved_and_pass_stays_sticky(client, db, create_user, auth_headers) -> None:
+    await create_user("user", "user")
+    await login(client, "user", "user", auth_headers)
+
+    list_response = await client.post("/tasks/list", json={}, headers=auth_headers)
+    task = next(item for item in (await list_response.json())["data"]["tasks"] if item["title"] == "1. Build OR for Three Inputs")
+    wrong_solution = "\n".join(
+        [
+            "scheme (a b c) main (out):",
+            " (a b) and (out)",
+            "end",
+        ]
+    )
+    accepted_solution = "\n".join(
+        [
+            "scheme (a b c) main (out):",
+            " local temp",
+            " (a b) or (temp)",
+            " (temp c) or (out)",
+            "end",
+        ]
+    )
+
+    first_submit = await client.post(
+        "/tasks/submit",
+        json={"task_id": task["id"], "solution": wrong_solution},
+        headers=auth_headers,
+    )
+    assert first_submit.status == 200
+    first_progress = (await first_submit.json())["data"]["progress"]
+    assert first_progress["passed"] is False
+    assert first_progress["attempt_count"] == 1
+
+    accepted_submit = await client.post(
+        "/tasks/submit",
+        json={"task_id": task["id"], "solution": accepted_solution},
+        headers=auth_headers,
+    )
+    assert accepted_submit.status == 200
+    accepted_progress = (await accepted_submit.json())["data"]["progress"]
+    assert accepted_progress["passed"] is True
+    assert accepted_progress["attempt_count"] == 2
+
+    final_submit = await client.post(
+        "/tasks/submit",
+        json={"task_id": task["id"], "solution": wrong_solution},
+        headers=auth_headers,
+    )
+    assert final_submit.status == 200
+    final_progress = (await final_submit.json())["data"]["progress"]
+    assert final_progress["passed"] is True
+    assert final_progress["attempt_count"] == 3
+    assert final_progress["latest_result"]["accepted"] is False
+
+    cursor = await db.execute("SELECT COUNT(*) AS count FROM task_submissions WHERE task_id = ?", (task["id"],))
+    assert int((await cursor.fetchone())["count"]) == 3
+
+    refreshed_list_response = await client.post("/tasks/list", json={}, headers=auth_headers)
+    refreshed_task = next(item for item in (await refreshed_list_response.json())["data"]["tasks"] if item["id"] == task["id"])
+    assert refreshed_task["passed"] is True
+    assert refreshed_task["attempt_count"] == 3
+    assert refreshed_task["latest_result"]["accepted"] is False
+    assert refreshed_task["latest_submitted_at"] is not None
+
+
+@pytest.mark.asyncio
 async def test_student_task_endpoints_require_auth(client, auth_headers) -> None:
     list_response = await client.post("/tasks/list", json={})
     assert list_response.status == 401
@@ -219,3 +356,37 @@ async def test_student_task_endpoints_require_auth(client, auth_headers) -> None
 
     submit_response = await client.post("/tasks/submit", json={"task_id": 1, "solution": ""}, headers=auth_headers)
     assert submit_response.status == 401
+
+    save_draft_response = await client.post("/tasks/save-draft", json={"task_id": 1, "solution": ""}, headers=auth_headers)
+    assert save_draft_response.status == 401
+
+
+@pytest.mark.asyncio
+async def test_seeded_beginner_task_accepts_matching_solution(client, create_user, auth_headers) -> None:
+    await create_user("user", "user")
+    await login(client, "user", "user", auth_headers)
+
+    list_response = await client.post("/tasks/list", json={}, headers=auth_headers)
+    assert list_response.status == 200
+    tasks = (await list_response.json())["data"]["tasks"]
+    task = next(item for item in tasks if item["title"] == "1. Build OR for Three Inputs")
+
+    submit_response = await client.post(
+        "/tasks/submit",
+        json={
+            "task_id": task["id"],
+            "solution": "\n".join(
+                [
+                    "scheme (a b c) main (out):",
+                    " local temp",
+                    " (a b) or (temp)",
+                    " (temp c) or (out)",
+                    "end",
+                ]
+            ),
+        },
+        headers=auth_headers,
+    )
+    assert submit_response.status == 200
+    result = (await submit_response.json())["data"]["result"]
+    assert result["accepted"] is True

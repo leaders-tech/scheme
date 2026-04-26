@@ -472,7 +472,7 @@ wheels = [
 ]
 
 [[package]]
-name = "templatepwa"
+name = "schemes"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

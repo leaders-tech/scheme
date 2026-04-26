@@ -107,8 +107,24 @@ test("scheme editor accepts completions with Tab and keeps Enter for new lines",
   expect(content).not.toContain("scheme (x1 x2) mod3 (out):and");
 });
 
+test("student sees the seeded beginner tasks first", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByLabel("Username").fill("user");
+  await page.getByLabel("Password").fill("user");
+  await page.getByRole("button", { name: "Login" }).click();
+  await waitForWorkspace(page);
+  await page.goto("/tasks");
+
+  await expect(page.getByRole("heading", { name: "1. Build OR for Three Inputs" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Theory" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What to submit" })).toBeVisible();
+  await expect(page.locator("aside button").filter({ hasText: "1. Build OR for Three Inputs" }).first()).toBeVisible();
+});
+
 test("public admin can create task and student can submit it", async ({ page }) => {
   await page.goto("/admin/tasks");
+  await expect(page.getByRole("button", { name: "New task" })).toBeEnabled();
+  await page.getByRole("button", { name: "New task" }).click();
   await page.getByLabel("Title").fill("XOR task");
   await page.getByLabel("Statement markdown").fill("# XOR\nBuild xor.");
   await page.getByLabel("Input count (N)").fill("2");
@@ -123,6 +139,7 @@ test("public admin can create task and student can submit it", async ({ page }) 
   await page.getByRole("button", { name: "Login" }).click();
   await waitForWorkspace(page);
   await page.goto("/tasks");
+  await page.getByRole("button", { name: "XOR task" }).click();
   await expect(page.getByRole("heading", { name: "XOR task" })).toBeVisible();
 
   const editor = page.locator(".cm-content").first();
@@ -130,8 +147,22 @@ test("public admin can create task and student can submit it", async ({ page }) 
   await page.keyboard.type(
     "scheme (a b) main (z):\n local x1 x2 x3\n (a b) or (x1)\n (a b) and (x2)\n (x2) not (x3)\n (x1 x3) and (z)\nend",
   );
+  await expect(page.getByText("Saved")).toBeVisible();
+
+  await page.getByRole("button", { name: "Open visualizer" }).click();
+  await expect(page.getByLabel("z 0")).toBeVisible();
+  await page.getByRole("button", { name: "a 0" }).click();
+  await expect(page.getByLabel("z 1")).toBeVisible();
+
   await page.getByRole("button", { name: "Submit" }).click();
   await expect(page.getByText("Accepted.")).toBeVisible();
+  await expect(page.getByRole("button", { name: /XOR task/ })).toContainText("Passed");
+
+  await page.reload();
+  await page.getByRole("button", { name: /XOR task/ }).click();
+  await expect(page.getByRole("heading", { name: "XOR task" })).toBeVisible();
+  await expect(page.getByText("Accepted.")).toBeVisible();
+  await expect(page.locator(".cm-content").first()).toContainText("scheme (a b) main (z):");
 });
 
 test("anonymous user is redirected to login from sandbox", async ({ page }) => {

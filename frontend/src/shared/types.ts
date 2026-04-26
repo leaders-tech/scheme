@@ -42,6 +42,10 @@ export type Task = {
   statement_markdown: string;
   input_count: number;
   output_count: number;
+  passed?: boolean;
+  attempt_count?: number;
+  latest_result?: TaskSubmitResult | null;
+  latest_submitted_at?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -67,6 +71,14 @@ export type TaskSubmitResult = {
     column: number;
     message: string;
   }>;
+};
+
+export type TaskProgress = {
+  draft_solution: string;
+  passed: boolean;
+  attempt_count: number;
+  latest_result: TaskSubmitResult | null;
+  latest_submitted_at: string | null;
 };
 
 export type TaskSubmitRequest = {
