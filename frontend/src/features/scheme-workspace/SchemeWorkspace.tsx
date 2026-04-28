@@ -66,7 +66,7 @@ export function SchemeWorkspace({ user, onLogout }: { user: User; onLogout: () =
     setSaveState("saving");
     setSaveError("");
     try {
-      const data = await postJson<{ file: SchemeFile }>("/scheme-files/save", {
+      const data = await postJson<{ file: SchemeFile }>("/api/scheme-files/save", {
         id: file.id,
         name: file.name,
         content: file.content,
@@ -105,7 +105,7 @@ export function SchemeWorkspace({ user, onLogout }: { user: User; onLogout: () =
       setLoading(true);
       setLoadError("");
       try {
-        const data = await postJson<{ files: SchemeFile[] }>("/scheme-files/list");
+        const data = await postJson<{ files: SchemeFile[] }>("/api/scheme-files/list");
         setFiles(data.files);
         lastSavedSnapshots.current = Object.fromEntries(data.files.map((file) => [file.id, buildSnapshot(file)]));
         const savedActiveId = Number(window.localStorage.getItem(ACTIVE_FILE_KEY) ?? "");
@@ -158,7 +158,7 @@ export function SchemeWorkspace({ user, onLogout }: { user: User; onLogout: () =
       await saveFile(activeFile);
     }
     const name = buildNextFileName(files);
-    const data = await postJson<{ file: SchemeFile }>("/scheme-files/create", { name, content: "" });
+    const data = await postJson<{ file: SchemeFile }>("/api/scheme-files/create", { name, content: "" });
     lastSavedSnapshots.current[data.file.id] = buildSnapshot(data.file);
     setFiles((current) => [...current, data.file]);
     setActiveFileId(data.file.id);
@@ -195,7 +195,7 @@ export function SchemeWorkspace({ user, onLogout }: { user: User; onLogout: () =
     if (!window.confirm(`Delete "${activeFile.name}"?`)) {
       return;
     }
-    await postJson<{ deleted: boolean; id: number }>("/scheme-files/delete", { id: activeFile.id });
+    await postJson<{ deleted: boolean; id: number }>("/api/scheme-files/delete", { id: activeFile.id });
     delete lastSavedSnapshots.current[activeFile.id];
     const remaining = files.filter((file) => file.id !== activeFile.id);
     setFiles(remaining);

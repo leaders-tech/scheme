@@ -61,17 +61,17 @@ function buildProgress(overrides: Partial<TaskProgress> = {}): TaskProgress {
 
 function mockTaskApi(task: Task, progress: TaskProgress) {
   postJson.mockImplementation(async (path: string, body?: unknown) => {
-    if (path === "/tasks/list") {
+    if (path === "/api/tasks/list") {
       return { tasks: [task] };
     }
-    if (path === "/tasks/get") {
+    if (path === "/api/tasks/get") {
       return { task, progress };
     }
-    if (path === "/tasks/save-draft") {
+    if (path === "/api/tasks/save-draft") {
       const payload = body as { solution: string };
       return { progress: { ...progress, draft_solution: payload.solution } };
     }
-    if (path === "/tasks/submit") {
+    if (path === "/api/tasks/submit") {
       return {
         result: { accepted: true, message: "Accepted." },
         progress: {
@@ -140,7 +140,7 @@ describe("TasksWorkspace", () => {
 
     await waitFor(() => {
       expect(postJson).toHaveBeenCalledWith(
-        "/tasks/save-draft",
+        "/api/tasks/save-draft",
         expect.objectContaining({
           task_id: 7,
           solution: "scheme () main ():\nend",
@@ -161,7 +161,7 @@ describe("TasksWorkspace", () => {
     await userEvent.click(screen.getByRole("button", { name: "Submit" }));
 
     await waitFor(() => {
-      expect(postJson).toHaveBeenCalledWith("/tasks/submit", expect.objectContaining({ task_id: 7 }));
+      expect(postJson).toHaveBeenCalledWith("/api/tasks/submit", expect.objectContaining({ task_id: 7 }));
     });
     expect(await screen.findByText("Accepted.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /XOR task/ })).toHaveTextContent("Passed");

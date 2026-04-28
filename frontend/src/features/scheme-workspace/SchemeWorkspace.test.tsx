@@ -44,10 +44,10 @@ function createDeferred<T>() {
 
 function renderWorkspace(files: SchemeFile[]) {
   postJson.mockImplementation(async (path: string, body?: unknown) => {
-    if (path === "/scheme-files/list") {
+    if (path === "/api/scheme-files/list") {
       return { files };
     }
-    if (path === "/scheme-files/create") {
+    if (path === "/api/scheme-files/create") {
       const payload = body as { name: string; content: string };
       return {
         file: {
@@ -60,7 +60,7 @@ function renderWorkspace(files: SchemeFile[]) {
         },
       };
     }
-    if (path === "/scheme-files/save") {
+    if (path === "/api/scheme-files/save") {
       const payload = body as { id: number; name: string; content: string };
       return {
         file: {
@@ -73,7 +73,7 @@ function renderWorkspace(files: SchemeFile[]) {
         },
       };
     }
-    if (path === "/scheme-files/delete") {
+    if (path === "/api/scheme-files/delete") {
       return { deleted: true, id: 1 };
     }
     throw new Error(`Unexpected path ${path}`);
@@ -118,7 +118,7 @@ describe("SchemeWorkspace", () => {
 
     await waitFor(() => {
       expect(postJson).toHaveBeenCalledWith(
-        "/scheme-files/save",
+        "/api/scheme-files/save",
         expect.objectContaining({
           id: 1,
           name: "scheme 1",
@@ -138,7 +138,7 @@ describe("SchemeWorkspace", () => {
     await actor.click(await screen.findByRole("button", { name: "Create first file" }));
 
     await waitFor(() => {
-      expect(postJson).toHaveBeenCalledWith("/scheme-files/create", { name: "scheme 1", content: "" });
+      expect(postJson).toHaveBeenCalledWith("/api/scheme-files/create", { name: "scheme 1", content: "" });
     });
   });
 
@@ -178,10 +178,10 @@ describe("SchemeWorkspace", () => {
     const savePayloads: Array<{ id: number; name: string; content: string }> = [];
 
     postJson.mockImplementation(async (path: string, body?: unknown) => {
-      if (path === "/scheme-files/list") {
+      if (path === "/api/scheme-files/list") {
         return { files: [startingFile] };
       }
-      if (path === "/scheme-files/save") {
+      if (path === "/api/scheme-files/save") {
         savePayloads.push(body as { id: number; name: string; content: string });
         return saveResponses[savePayloads.length - 1].promise;
       }

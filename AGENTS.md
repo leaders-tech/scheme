@@ -9,6 +9,10 @@
   - production is same-origin behind nginx or Traefik;
   - dev-only CORS is for localhost splits;
   - browser API calls stay POST-based for this project.
+- Keep backend routing easy to proxy:
+  - all HTTP backend endpoints must start with `/api`;
+  - all WebSocket endpoints must start with `/ws`;
+  - frontend page routes must not use `/api` or `/ws`.
 - Keep all user-facing text in simple English.
 - When adding backend DB code, place SQL only under `backend/db`.
 - When adding frontend pages, keep routing and auth flow direct and beginner-friendly.

@@ -22,7 +22,7 @@ describe("AdminTasksWorkspace", () => {
     postJson.mockImplementation(
       (path: string) =>
         new Promise((resolve) => {
-          if (path === "/admin/tasks/list") {
+          if (path === "/api/admin/tasks/list") {
             resolveList = resolve as (value: { tasks: [] }) => void;
             return;
           }
@@ -43,10 +43,10 @@ describe("AdminTasksWorkspace", () => {
 
   it("creates a task through admin endpoint", async () => {
     postJson.mockImplementation(async (path: string, body?: unknown) => {
-      if (path === "/admin/tasks/list") {
+      if (path === "/api/admin/tasks/list") {
         return { tasks: [] };
       }
-      if (path === "/admin/tasks/create") {
+      if (path === "/api/admin/tasks/create") {
         const payload = body as {
           title: string;
           statement_markdown: string;
@@ -86,7 +86,7 @@ describe("AdminTasksWorkspace", () => {
 
     await waitFor(() => {
       expect(postJson).toHaveBeenCalledWith(
-        "/admin/tasks/create",
+        "/api/admin/tasks/create",
         expect.objectContaining({
           title: "XOR",
           input_count: 2,
@@ -99,7 +99,7 @@ describe("AdminTasksWorkspace", () => {
 
   it("shows validation error for malformed expected outputs", async () => {
     postJson.mockImplementation(async (path: string) => {
-      if (path === "/admin/tasks/list") {
+      if (path === "/api/admin/tasks/list") {
         return { tasks: [] };
       }
       throw new Error(`Unexpected path ${path}`);

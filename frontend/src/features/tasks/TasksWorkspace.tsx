@@ -93,7 +93,7 @@ export function TasksWorkspace({ user, onLogout }: { user: User; onLogout: () =>
       setSaveState("saving");
       setSaveError("");
       try {
-        const data = await postJson<{ progress: TaskProgress }>("/tasks/save-draft", {
+        const data = await postJson<{ progress: TaskProgress }>("/api/tasks/save-draft", {
           task_id: taskId,
           solution: nextSolution,
         });
@@ -121,7 +121,7 @@ export function TasksWorkspace({ user, onLogout }: { user: User; onLogout: () =>
       setLoading(true);
       setLoadError("");
       try {
-        const data = await postJson<{ tasks: Task[] }>("/tasks/list");
+        const data = await postJson<{ tasks: Task[] }>("/api/tasks/list");
         setTasks(data.tasks);
         const savedTaskId = Number(window.localStorage.getItem(ACTIVE_TASK_KEY) ?? "");
         const nextTask = data.tasks.find((task) => task.id === savedTaskId) ?? data.tasks[0] ?? null;
@@ -152,7 +152,7 @@ export function TasksWorkspace({ user, onLogout }: { user: User; onLogout: () =>
 
     const loadTask = async () => {
       try {
-        const data = await postJson<{ task: Task; progress: TaskProgress }>("/tasks/get", { id: activeTaskId });
+        const data = await postJson<{ task: Task; progress: TaskProgress }>("/api/tasks/get", { id: activeTaskId });
         if (cancelled) {
           return;
         }
@@ -226,7 +226,7 @@ export function TasksWorkspace({ user, onLogout }: { user: User; onLogout: () =>
     setSubmitting(true);
     setSubmitError("");
     try {
-      const data = await postJson<{ result: TaskSubmitResult; progress: TaskProgress }>("/tasks/submit", {
+      const data = await postJson<{ result: TaskSubmitResult; progress: TaskProgress }>("/api/tasks/submit", {
         task_id: activeTaskId,
         solution,
       });

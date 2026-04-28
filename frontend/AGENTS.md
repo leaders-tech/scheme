@@ -16,7 +16,7 @@
 
 ## How to call the backend
 
-- Import `postJson` from `src/shared/api.ts` and call it with the route path and a plain object.
+- Import `postJson` from `src/shared/api.ts` and call it with the `/api/...` route path and a plain object.
 - Never write a raw `fetch` for backend routes — `postJson` handles cookie auth and error wrapping.
 - If the server is not running or returns an error, `postJson` throws an `ApiError`.
   Catch it and show `error.message` to the user so they know what went wrong.
@@ -25,11 +25,12 @@
 
 - Call `useAuth()` from `src/app/auth.tsx` to read the current logged-in user and the logout function.
 - A protected page should redirect to `/login` when `useAuth().user` is `null`.
-- Do not call `/auth/me` yourself — `AuthProvider` in `App.tsx` loads the session on startup automatically.
+- Do not call `/api/auth/me` yourself — `AuthProvider` in `App.tsx` loads the session on startup automatically.
 
 ## Real-time updates (WebSocket)
 
 - WebSocket connection logic lives in `src/shared/socket.ts`.
+- WebSocket backend routes start with `/ws`, not `/api`.
 - The socket connects after login and disconnects on logout — do not manage the connection manually.
 - To react to live server events, add a `useEffect` listener in the component that needs live data.
 - Check the browser console for WebSocket errors after any auth or routing change.

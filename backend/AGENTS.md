@@ -8,6 +8,8 @@
 - Return only the shared JSON envelope shape.
 - Keep production same-origin for this template. Do not add cross-origin production CORS unless the architecture changes.
 - Keep browser-facing JSON endpoints as POST routes in this template unless the user explicitly changes that rule.
+- Register all HTTP backend endpoints under `/api/...`; keep WebSocket routes under `/ws...`.
+- Do not add unprefixed backend HTTP routes such as `/auth/...`, `/tasks/...`, or `/health`.
 - Do not introduce ORM, DI, pydantic, or generic service layers.
 - Add backend tests for each new endpoint, auth rule, DB branch, and error path that matters.
 - After every change, run `uv run pytest` and make sure all tests pass before calling the task done.

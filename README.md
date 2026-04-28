@@ -193,6 +193,8 @@ These accounts exist only in development mode. They are not in production.
 ## How the frontend talks to the backend
 
 The frontend needs to know the backend address. `make front` sets this automatically.
+Browser JSON requests go to backend paths that start with `/api`.
+Live updates use the WebSocket path `/ws`.
 
 If you start the frontend with `npm run dev` instead, create the file `frontend/.env.development.local` and put this inside:
 
@@ -346,7 +348,7 @@ make open-docker
 
 Open in browser:
 - Frontend: `http://localhost:8088`
-- Backend health check: `http://localhost:8089/health`
+- Backend health check: `http://localhost:8089/api/health`
 
 Stop and remove containers:
 
@@ -363,6 +365,8 @@ make clean-docker
 - Login uses `HttpOnly` cookies so JavaScript cannot read them.
 - `SameSite=Lax` cookies protect against most cross-site request attacks.
 - In production, the frontend should be served by nginx or Traefik behind a reverse proxy.
+- Route `/api` and `/ws` to the backend container. Route all other paths to the frontend container.
+- WebSocket routing for `/ws` must allow connection upgrades.
 
 ---
 
@@ -375,5 +379,5 @@ Set these environment variables in Dokploy instead of editing the `docker-compos
 |----------|------------|
 | `DOCKER_COOKIE_SECRET` | Secret key for signing cookies — use a long random string |
 | `DOCKER_FRONTEND_ORIGIN` | Public URL of the frontend, e.g. `https://myapp.example.com` |
-| `DOCKER_VITE_BACKEND_URL` | Public URL of the backend API |
+| `DOCKER_VITE_BACKEND_URL` | Public URL that serves backend `/api` and `/ws` paths |
 | `DOCKER_APP_MODE` | `prod` for production, `dev` to enable demo accounts |

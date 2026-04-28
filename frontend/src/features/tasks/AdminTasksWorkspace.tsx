@@ -107,7 +107,7 @@ export function AdminTasksWorkspace() {
       setLoading(true);
       setLoadError("");
       try {
-        const data = await postJson<{ tasks: AdminTask[] }>("/admin/tasks/list");
+        const data = await postJson<{ tasks: AdminTask[] }>("/api/admin/tasks/list");
         setTasks(data.tasks);
         const first = data.tasks[0] ?? null;
         setActiveTaskId(first?.id ?? null);
@@ -156,11 +156,11 @@ export function AdminTasksWorkspace() {
     };
     try {
       if (activeTaskId === null) {
-        const data = await postJson<{ task: AdminTask }>("/admin/tasks/create", payload);
+        const data = await postJson<{ task: AdminTask }>("/api/admin/tasks/create", payload);
         setTasks((current) => [...current, data.task]);
         setActiveTaskId(data.task.id);
       } else {
-        const data = await postJson<{ task: AdminTask }>("/admin/tasks/save", { id: activeTaskId, ...payload });
+        const data = await postJson<{ task: AdminTask }>("/api/admin/tasks/save", { id: activeTaskId, ...payload });
         setTasks((current) => current.map((task) => (task.id === data.task.id ? data.task : task)));
         setActiveTaskId(data.task.id);
       }
@@ -179,7 +179,7 @@ export function AdminTasksWorkspace() {
       return;
     }
     try {
-      await postJson<{ deleted: boolean; id: number }>("/admin/tasks/delete", { id: activeTaskId });
+      await postJson<{ deleted: boolean; id: number }>("/api/admin/tasks/delete", { id: activeTaskId });
       const remaining = tasks.filter((task) => task.id !== activeTaskId);
       setTasks(remaining);
       const first = remaining[0] ?? null;

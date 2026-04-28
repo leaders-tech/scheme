@@ -27,7 +27,7 @@ export default defineConfig({
     {
       command: "uv run python -m backend.main",
       cwd: repoRoot,
-      url: `${backendUrl}/health`,
+      url: `${backendUrl}/api/health`,
       reuseExistingServer: false,
       env: {
         APP_MODE: "dev",
