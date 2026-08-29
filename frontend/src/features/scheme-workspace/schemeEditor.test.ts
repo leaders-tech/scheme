@@ -10,14 +10,14 @@ import { classifySchemeTokens, collectSchemeCompletions } from "./schemeEditor";
 describe("schemeEditor", () => {
   it("classifies keywords, built-ins, helper schemes, signals, and punctuation", () => {
     const source = `
-scheme (a b) helper (mid):
- (a b) and (mid)
-end
-
 scheme (x) main (out):
  local temp
  (x) helper (temp)
  end
+
+scheme (a b) helper (mid):
+ (a b) and (mid)
+end
 `;
 
     const tokens = classifySchemeTokens(source);
@@ -40,12 +40,12 @@ scheme (x) main (out):
 
   it("suggests built-ins and helper schemes after a statement input list", () => {
     const source = `
-scheme (x) helper (y):
- (x) not (y)
-end
-
 scheme (a) main (out):
  (a) 
+end
+
+scheme (x) helper (y):
+ (x) not (y)
 end
 `;
 
@@ -93,9 +93,9 @@ end
 
   it("still suggests structure tokens on a broken file", () => {
     const source = `
-scheme (x) helper (y):
-
 scheme (a) main (out):
+
+scheme (x) helper (y):
 `;
 
     const labels = collectSchemeCompletions(source, source.length).map((item) => item.label);

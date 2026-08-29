@@ -229,3 +229,19 @@ def test_create_app_refuses_default_secret_in_prod(tmp_path) -> None:
 
     with pytest.raises(ValueError, match="default COOKIE_SECRET"):
         create_app(settings)
+
+
+def test_production_mode_alias_uses_prod_rules(tmp_path) -> None:
+    settings = Settings(
+        mode="production",
+        host="127.0.0.1",
+        port=8081,
+        db_path=tmp_path / "prod.sqlite3",
+        cookie_secret="real-production-secret",
+        frontend_origin="https://scheme.tlfedu.tech",
+    )
+
+    assert settings.mode == "prod"
+    assert settings.secure_cookies is True
+    assert settings.allowed_origins == {"https://scheme.tlfedu.tech"}
+    create_app(settings)

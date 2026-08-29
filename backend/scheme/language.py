@@ -451,7 +451,7 @@ def parse_and_validate_main_scheme(source: str) -> tuple[ParsedMainScheme | None
         return None, diagnostics
     if not parsed.schemes:
         return None, [SchemeDiagnostic(line=1, column=1, message='File must contain at least one "scheme" definition.')]
-    main = parsed.schemes[-1]
+    main = parsed.schemes[0]
     return (
         ParsedMainScheme(
             parsed=parsed,

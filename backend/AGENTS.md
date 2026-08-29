@@ -30,3 +30,5 @@
   - wire it into a route file;
   - test both success and important failure paths.
 - Add backend Python packages with `uv add` for runtime deps and `uv add --dev` for dev-only deps.
+- For tlfpaas deploy, keep backend runtime env in root `docker-compose.yml` and non-secret defaults in `.docker.env`.
+- Never commit `COOKIE_SECRET`; set it in the tlfpaas Secrets UI.

@@ -47,3 +47,7 @@
 - Keep LAN dev mode intentionally simple: prefer the explicit macOS Wi-Fi `en0` helper over generic network auto-detection.
 - Keep LAN ports separate from the default localhost ports unless the user asks otherwise.
 - Do not expand LAN mode into a multi-interface discovery system unless the user asks for broader network support.
+- Keep root `docker-compose.yml` compatible with tlfpaas autodeploy:
+  - use `expose` and `tlfpaas.route`, not `ports`;
+  - keep secrets out of `.docker.env`;
+  - put local Docker ports, dev mode, and build args in `docker-compose.local.yml`.

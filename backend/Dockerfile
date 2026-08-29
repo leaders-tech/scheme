@@ -1,4 +1,4 @@
-# This file builds the production backend image for Docker and Dokploy.
+# This file builds the production backend image for Docker and tlfpaas.
 # Edit this file when backend runtime packages, ports, or container startup rules change.
 # Copy a stage pattern here when you add another small Python service image.
 FROM python:3.14-slim-trixie AS builder

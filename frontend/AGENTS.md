@@ -64,3 +64,5 @@
 - Do not use deep relative imports like `../../../shared/...`. Keep files close to where they are used.
 - Add runtime packages with `npm install <name>` and dev-only packages with `npm install -D <name>`.
 - Start each file with a short comment block (2–4 lines): what this file does, when to edit it, and whether it can be copied as a starting point for a similar file.
+- For tlfpaas deploy, leave the root compose frontend service without local ports or non-public build args.
+- Put local Docker frontend build args such as `VITE_BACKEND_URL=http://localhost:8089` in `docker-compose.local.yml`.

@@ -136,14 +136,15 @@ def task_five_markdown() -> str:
             "## Theory",
             "Odd parity means that the output is `1` when the number of input ones is odd.",
             "With four inputs, that means the output is `1` when there are exactly one or three ones.",
-            "You may define helper schemes before the final scheme in the same file.",
+            "The first scheme in the file is the main scheme.",
+            "You may define helper schemes after the main scheme in the same file.",
             "A good plan is to build a helper `xor2`, then use it again to combine larger groups.",
             "## Task",
             "Build a scheme with four input signals and one output signal.",
             "The output must be `1` when the number of ones on the input is odd.",
             "## What to submit",
-            "- Write a helper scheme `xor2` first.",
-            "- Write the final scheme after the helper scheme.",
+            "- Write the final scheme first.",
+            "- Write a helper scheme `xor2` after it.",
             "- Use the input names `a`, `b`, `c`, and `d`.",
             "- Use the output name `out`.",
         ]
@@ -212,14 +213,14 @@ def task_four_solution() -> str:
 def task_five_solution() -> str:
     return join_lines(
         [
-            xor_two_solution("xor2"),
-            "",
             "scheme (a b c d) main (out):",
             " local left right",
             " (a b) xor2 (left)",
             " (c d) xor2 (right)",
             " (left right) xor2 (out)",
             "end",
+            "",
+            xor_two_solution("xor2"),
         ]
     )
 

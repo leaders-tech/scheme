@@ -4,7 +4,33 @@ Edit this file when backend scheme validation rules change.
 Copy this file as a starting point when you add another backend parser test.
 """
 
-from backend.scheme.language import parse_and_validate_main_scheme
+from backend.scheme.language import evaluate_main_scheme, parse_and_validate_main_scheme
+
+
+def test_backend_uses_first_scheme_as_main() -> None:
+    parsed, diagnostics = parse_and_validate_main_scheme(
+        "\n".join(
+            [
+                "scheme (a b) main (out):",
+                " (a b) xor2 (out)",
+                "end",
+                "",
+                "scheme (x y) xor2 (out):",
+                " local both either not_both",
+                " (x y) and (both)",
+                " (x y) or (either)",
+                " (both) not (not_both)",
+                " (either not_both) and (out)",
+                "end",
+            ]
+        )
+    )
+
+    assert diagnostics == []
+    assert parsed is not None
+    assert parsed.main_name == "main"
+    assert parsed.inputs == ["a", "b"]
+    assert evaluate_main_scheme(parsed, {"a": 1, "b": 0}) == [1]
 
 
 def test_backend_reports_duplicate_writes() -> None:

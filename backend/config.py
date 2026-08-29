@@ -31,6 +31,9 @@ class Settings:
     access_ttl_seconds: int = 2 * 60 * 60
     refresh_ttl_seconds: int = 60 * 24 * 60 * 60
 
+    def __post_init__(self) -> None:
+        self.mode = normalize_mode(self.mode)
+
     @property
     def secure_cookies(self) -> bool:
         return self.mode == "prod"
@@ -54,7 +57,7 @@ class Settings:
 
 def load_settings() -> Settings:
     load_dotenv()
-    mode = os.getenv("APP_MODE", "dev").strip().lower()
+    mode = normalize_mode(os.getenv("APP_MODE", "dev"))
     host = os.getenv("APP_HOST", "localhost").strip()
     port = int(os.getenv("APP_PORT", "8000"))
     db_path = Path(os.getenv("DB_PATH", "./dev.sqlite3")).expanduser()
@@ -72,6 +75,13 @@ def load_settings() -> Settings:
     )
     validate_settings(settings)
     return settings
+
+
+def normalize_mode(mode: str) -> str:
+    cleaned = mode.strip().lower()
+    if cleaned == "production":
+        return "prod"
+    return cleaned
 
 
 def validate_settings(settings: Settings) -> None:

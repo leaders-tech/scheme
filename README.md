@@ -74,6 +74,14 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
 nvm install 24
 ```
 
+### Check Rust (for the Schemio interpreter)
+
+```bash
+cargo -V
+```
+
+If you get "command not found", install Rust with [rustup](https://rustup.rs/), then open a new terminal.
+
 ---
 
 ## First-time setup
@@ -258,6 +266,12 @@ cd frontend
 npm test
 ```
 
+### Schemio interpreter tests
+
+```bash
+make schemio-test
+```
+
 ### End-to-end tests (browser automation)
 
 ```bash
@@ -337,6 +351,8 @@ make test-e2e-docker
 
 Docker packages the app into containers so it runs the same way everywhere.
 You do not need Docker for local development. Use it when you want to test how the app behaves in production.
+The root `docker-compose.yml` is written for tlfpaas autodeploy. Local Docker commands add `docker-compose.local.yml`
+on top of it so local ports and dev-only settings stay out of the deploy file.
 
 Quick local test with Docker:
 
@@ -364,20 +380,40 @@ make clean-docker
 - Passwords are stored as Argon2 hashes — not as plain text.
 - Login uses `HttpOnly` cookies so JavaScript cannot read them.
 - `SameSite=Lax` cookies protect against most cross-site request attacks.
-- In production, the frontend should be served by nginx or Traefik behind a reverse proxy.
+- In production, tlfpaas routes the frontend and backend through one public URL.
 - Route `/api` and `/ws` to the backend container. Route all other paths to the frontend container.
 - WebSocket routing for `/ws` must allow connection upgrades.
 
 ---
 
-## Production deployment
+## tlfpaas deployment
 
-Schemes is designed for [Dokploy](https://dokploy.com/) with Docker Compose.
-Set these environment variables in Dokploy instead of editing the `docker-compose.yml` file:
+Schemes is designed for tlfpaas autodeploy.
+The public app URL is:
+
+```text
+https://scheme.tlfedu.tech
+```
+
+tlfpaas reads the root `docker-compose.yml`, builds the two images, and routes traffic like this:
+
+```text
+/api* -> backend
+/ws*  -> backend
+/*    -> frontend
+```
+
+The root `.docker.env` file contains only non-secret deploy settings:
+
+```env
+APP_MODE=prod
+FRONTEND_ORIGIN=https://scheme.tlfedu.tech
+```
+
+Add this secret in the tlfpaas Secrets UI before deploying:
 
 | Variable | What it is |
 |----------|------------|
-| `DOCKER_COOKIE_SECRET` | Secret key for signing cookies — use a long random string |
-| `DOCKER_FRONTEND_ORIGIN` | Public URL of the frontend, e.g. `https://myapp.example.com` |
-| `DOCKER_VITE_BACKEND_URL` | Public URL that serves backend `/api` and `/ws` paths |
-| `DOCKER_APP_MODE` | `prod` for production, `dev` to enable demo accounts |
+| `COOKIE_SECRET` | Secret key for signing cookies — use a long random string |
+
+Do not put `COOKIE_SECRET`, API keys, tokens, or passwords in `.docker.env`.

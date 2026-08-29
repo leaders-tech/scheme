@@ -10,7 +10,7 @@ DOCKER_APP_MODE := dev
 DOCKER_COOKIE_SECRET := local-docker-secret
 DOCKER_FRONTEND_ORIGIN := http://localhost:$(DOCKER_FRONTEND_PORT)
 DOCKER_VITE_BACKEND_URL := http://localhost:$(DOCKER_BACKEND_PORT)
-DOCKER_COMPOSE := ./scripts/docker-compose.sh -p $(DOCKER_PROJECT_NAME) -f docker-compose.yml
+DOCKER_COMPOSE := ./scripts/docker-compose.sh -p $(DOCKER_PROJECT_NAME) -f docker-compose.yml -f docker-compose.local.yml
 WIFI_IP := $(shell ipconfig getifaddr en0 2>/dev/null)
 LAN_FRONTEND_PORT := 4173
 LAN_BACKEND_PORT := 4174
@@ -18,9 +18,11 @@ LAN_FRONTEND_URL := http://$(WIFI_IP):$(LAN_FRONTEND_PORT)
 LAN_BACKEND_URL := http://$(WIFI_IP):$(LAN_BACKEND_PORT)
 PY_RUNTIME_DEPS := $(shell python3 -c 'import re, tomllib, pathlib; data = tomllib.loads(pathlib.Path("pyproject.toml").read_text()); print(" ".join(re.match(r"[A-Za-z0-9._-]+", dep).group(0) for dep in data["project"]["dependencies"]))')
 PY_DEV_DEPS := $(shell python3 -c 'import re, tomllib, pathlib; data = tomllib.loads(pathlib.Path("pyproject.toml").read_text()); print(" ".join(re.match(r"[A-Za-z0-9._-]+", dep).group(0) for dep in data["dependency-groups"]["dev"]))')
+RUST_CARGO := $(shell rustup which cargo)
+RUST_TOOLCHAIN_BIN := $(dir $(shell rustup which rustc))
 CHECK_WIFI_IP = @test -n "$(WIFI_IP)" || (echo "Wi-Fi IP was not found on en0. Connect to Wi-Fi or use normal make back / make front."; exit 1)
 
-.PHONY: help setup back back-once front open back-lan front-lan open-lan back-docker front-docker open-docker stop-docker clean-docker format test test-e2e-docker deps-update-safe deps-update-latest
+.PHONY: help setup back back-once front open back-lan front-lan open-lan back-docker front-docker open-docker stop-docker clean-docker schemio-build schemio-test format test test-e2e-docker deps-update-safe deps-update-latest
 
 help:
 	@printf "Available commands:\n"
@@ -37,6 +39,8 @@ help:
 	@printf "  make open-docker Open the Docker frontend in a browser\n"
 	@printf "  make stop-docker Stop the local Docker test containers\n"
 	@printf "  make clean-docker Stop the local Docker test containers and delete their images and data\n"
+	@printf "  make schemio-build Build the Schemio command-line interpreter\n"
+	@printf "  make schemio-test Run the Schemio interpreter tests\n"
 	@printf "  make deps-update-safe Update backend and frontend deps in the safe supported way\n"
 	@printf "  make deps-update-latest Update backend deps to the newest available versions\n"
 	@printf "  make format  Format backend and frontend code\n"
@@ -89,6 +93,12 @@ stop-docker:
 clean-docker:
 	DOCKER_APP_MODE=$(DOCKER_APP_MODE) DOCKER_COOKIE_SECRET=$(DOCKER_COOKIE_SECRET) DOCKER_FRONTEND_PORT=$(DOCKER_FRONTEND_PORT) DOCKER_BACKEND_PORT=$(DOCKER_BACKEND_PORT) DOCKER_FRONTEND_ORIGIN=$(DOCKER_FRONTEND_ORIGIN) DOCKER_VITE_BACKEND_URL=$(DOCKER_VITE_BACKEND_URL) $(DOCKER_COMPOSE) down -v --remove-orphans --rmi local
 
+schemio-build:
+	cd schemio && PATH="$(RUST_TOOLCHAIN_BIN):$$PATH" $(RUST_CARGO) build --release
+
+schemio-test:
+	cd schemio && PATH="$(RUST_TOOLCHAIN_BIN):$$PATH" $(RUST_CARGO) test
+
 deps-update-safe:
 	uv add --bounds major $(PY_RUNTIME_DEPS)
 	uv add --dev --bounds major $(PY_DEV_DEPS)
@@ -105,6 +115,7 @@ format:
 
 test:
 	uv run pytest
+	$(MAKE) schemio-test
 	cd frontend && npm run test
 	cd frontend && npm run test:e2e
 

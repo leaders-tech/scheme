@@ -521,7 +521,7 @@ function analyzeParsed(parsed: ParsedFile): AnalysisWithAst {
     visit(scheme.name.name);
   }
 
-  const mainScheme = parsed.schemes[parsed.schemes.length - 1] ?? null;
+  const mainScheme = parsed.schemes[0] ?? null;
   return {
     mainSchemeName: mainScheme?.name.name ?? null,
     inputs: mainScheme?.inputs.items.map((item) => item.name) ?? [],
@@ -741,7 +741,7 @@ function buildEditorSchemesFromFallback(source: string): EditorSchemeSymbols[] {
 export function collectEditorSymbols(source: string, offset: number): EditorSymbolData {
   const parsed = parseFile(source);
   const schemes = parsed.ok ? buildEditorSchemesFromParsed(parsed.parsed) : buildEditorSchemesFromFallback(source);
-  const mainSchemeName = schemes[schemes.length - 1]?.name ?? null;
+  const mainSchemeName = schemes[0]?.name ?? null;
   const helperSchemeNames = schemes
     .map((scheme) => scheme.name)
     .filter((name, index, items) => name !== mainSchemeName && !BUILTIN_SCHEME_NAMES.includes(name) && items.indexOf(name) === index);

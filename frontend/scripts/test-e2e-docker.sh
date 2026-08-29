@@ -35,7 +35,7 @@ export DOCKER_VITE_BACKEND_URL="${DOCKER_VITE_BACKEND_URL:-http://localhost:${DO
 export PW_DOCKER_FRONTEND_URL="${PW_DOCKER_FRONTEND_URL:-http://localhost:${DOCKER_FRONTEND_PORT}}"
 
 cleanup() {
-  "${COMPOSE_SCRIPT}" -p "${PROJECT_NAME}" -f "${REPO_DIR}/docker-compose.yml" down -v --remove-orphans >/dev/null 2>&1 || true
+  "${COMPOSE_SCRIPT}" -p "${PROJECT_NAME}" -f "${REPO_DIR}/docker-compose.yml" -f "${REPO_DIR}/docker-compose.local.yml" down -v --remove-orphans >/dev/null 2>&1 || true
 }
 
 wait_for_frontend() {
@@ -55,7 +55,7 @@ wait_for_frontend() {
 trap cleanup EXIT INT TERM
 
 cleanup
-"${COMPOSE_SCRIPT}" -p "${PROJECT_NAME}" -f "${REPO_DIR}/docker-compose.yml" up -d --build --remove-orphans
+"${COMPOSE_SCRIPT}" -p "${PROJECT_NAME}" -f "${REPO_DIR}/docker-compose.yml" -f "${REPO_DIR}/docker-compose.local.yml" up -d --build --remove-orphans
 wait_for_frontend
 
 cd "${FRONTEND_DIR}"

@@ -1,4 +1,4 @@
-# This file builds the production frontend image for Docker and Dokploy.
+# This file builds the production frontend image for Docker and tlfpaas.
 # Edit this file when frontend build steps, nginx runtime setup, or container ports change.
 # Copy a stage pattern here when you add another small static frontend image.
 FROM node:25.6-alpine AS builder

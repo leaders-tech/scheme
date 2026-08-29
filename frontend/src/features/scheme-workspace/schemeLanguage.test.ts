@@ -8,18 +8,18 @@ import { describe, expect, it } from "vitest";
 import { analyzeSchemeSource, collectEditorSymbols, collectSchemeNames, collectVisibleSignalsAtOffset, evaluateMainScheme } from "./schemeLanguage";
 
 describe("schemeLanguage", () => {
-  it("uses the last scheme as the main scheme and evaluates helper schemes", () => {
+  it("uses the first scheme as the main scheme and evaluates helper schemes", () => {
     const source = `
+scheme (a b) main (result):
+ (a b) xor2 (result)
+end
+
 scheme (x1 x2) xor2 (out):
  local both any not_both
  (x1 x2) and (both)
  (x1 x2) or (any)
  (both) not (not_both)
  (any not_both) and (out)
-end
-
-scheme (a b) main (result):
- (a b) xor2 (result)
 end
 `;
 
@@ -128,18 +128,18 @@ end
 
   it("collects helper names and visible signals for editor tooling", () => {
     const source = `
+scheme (a b) main (result):
+ local temp
+ (a b) xor2 (temp)
+ (temp) not (result)
+end
+
 scheme (x1 x2) xor2 (out):
  local both any not_both
  (x1 x2) and (both)
  (x1 x2) or (any)
  (both) not (not_both)
  (any not_both) and (out)
-end
-
-scheme (a b) main (result):
- local temp
- (a b) xor2 (temp)
- (temp) not (result)
 end
 `;
 
@@ -154,11 +154,11 @@ end
 
   it("keeps editor symbols available on a partially broken file", () => {
     const source = `
-scheme (x) helper (y):
- local mid
-
 scheme (a) main (out):
  (a) helper (out)
+
+scheme (x) helper (y):
+ local mid
 `;
 
     const symbols = collectEditorSymbols(source, source.length);

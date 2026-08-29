@@ -1,0 +1,13 @@
+# This file describes the small standalone Schemio command-line interpreter.
+# Edit it when the Rust package metadata or build options change.
+# Copy its simple dependency-free setup when you add another standalone tool.
+[package]
+name = "schemio"
+version = "0.1.0"
+edition = "2024"
+description = "A small command-line interpreter for the Schemio teaching language"
+license = "MIT"
+
+[[bin]]
+name = "schemio"
+path = "src/main.rs"

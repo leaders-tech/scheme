@@ -1,0 +1,18 @@
+# This file adds local-only Docker ports and dev settings on top of docker-compose.yml.
+# Edit this file when local Docker testing ports or local env values change.
+# Do not copy this file for tlfpaas deploy settings.
+services:
+  backend:
+    environment:
+      APP_MODE: ${DOCKER_APP_MODE:-dev}
+      COOKIE_SECRET: ${DOCKER_COOKIE_SECRET:-local-docker-secret}
+      FRONTEND_ORIGIN: ${DOCKER_FRONTEND_ORIGIN:-http://localhost:8088}
+    ports:
+      - "${DOCKER_BACKEND_PORT:-8089}:8081"
+
+  frontend:
+    build:
+      args:
+        VITE_BACKEND_URL: ${DOCKER_VITE_BACKEND_URL:-http://localhost:8089}
+    ports:
+      - "${DOCKER_FRONTEND_PORT:-8088}:8080"

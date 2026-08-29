@@ -256,7 +256,7 @@ export function SchemeWorkspace({ user, onLogout }: { user: User; onLogout: () =
         {!activeFile ? (
           <div className="rounded-3xl border border-slate-200/80 bg-white/90 p-8 shadow-lg shadow-slate-200/60">
             <h2 className="text-2xl font-semibold text-slate-900">Create your first scheme file</h2>
-            <p className="mt-2 text-slate-600">Each file stores one small workspace and uses the last scheme as the main visualizer interface.</p>
+            <p className="mt-2 text-slate-600">Each file stores one small workspace and uses the first scheme as the main visualizer interface.</p>
             <button className="mt-5 rounded-2xl bg-slate-900 px-4 py-3 font-semibold text-white" onClick={() => void createFile()} type="button">
               Create first file
             </button>
@@ -267,7 +267,7 @@ export function SchemeWorkspace({ user, onLogout }: { user: User; onLogout: () =
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-2xl font-semibold text-slate-900">{activeFile.name}</h2>
-                  <p className="mt-1 text-sm text-slate-600">Last scheme in the file becomes the black-box visualizer.</p>
+                  <p className="mt-1 text-sm text-slate-600">First scheme in the file becomes the black-box visualizer.</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="rounded-full bg-slate-100 px-3 py-2 text-sm text-slate-700">
