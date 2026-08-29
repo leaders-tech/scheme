@@ -64,7 +64,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          files=(release-files/*.tar.gz release-files/*.tar.gz.sha256)
+          mapfile -t files < <(find release-files -type f \( -name '*.tar.gz' -o -name '*.tar.gz.sha256' \) | sort)
           test "${#files[@]}" -eq 4
           gh release create "${GITHUB_REF_NAME}" "${files[@]}" --generate-notes 2>&1 | tee release-output.txt
           status="${PIPESTATUS[0]}"
