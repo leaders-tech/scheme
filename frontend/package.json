@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:playground": "tsc -b && vite build --config vite.playground.config.ts",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "npm run build:playground && playwright test",
     "test:e2e:docker": "sh ./scripts/test-e2e-docker.sh",
     "format": "prettier --write ."
   },

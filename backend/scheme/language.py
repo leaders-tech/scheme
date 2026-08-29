@@ -132,6 +132,13 @@ def tokenize(source: str) -> list[Token]:
     column = 1
     index = 0
 
+    if source.startswith("#!"):
+        newline = source.find("\n")
+        if newline == -1:
+            return tokens
+        index = newline + 1
+        line = 2
+
     while index < len(source):
         char = source[index]
         if char == "\n":

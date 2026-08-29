@@ -82,6 +82,14 @@ cargo -V
 
 If you get "command not found", install Rust with [rustup](https://rustup.rs/), then open a new terminal.
 
+### Use Schemio in Ejudge
+
+The repository includes ready-to-copy Ejudge templates for the Schemio command-line interpreter. They install the Linux binary at `/opt/ejudge/schemio`, add the `.sch` language, and let Ejudge generate its own configuration files. Follow the complete [Ejudge installation guide](schemio/README.md#use-schemio-in-ejudge).
+
+### Embed a Schemio playground in a course page
+
+The frontend can also build a lazy-loaded `<schemio-playground>` web component for static course pages. It includes the editor, live input/output debugger, diagnostics, and browser-local saving. Follow the [embed guide](schemio/README.md#embed-a-playground-on-a-course-page).
+
 ---
 
 ## First-time setup

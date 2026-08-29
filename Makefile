@@ -22,7 +22,7 @@ RUST_CARGO := $(shell rustup which cargo)
 RUST_TOOLCHAIN_BIN := $(dir $(shell rustup which rustc))
 CHECK_WIFI_IP = @test -n "$(WIFI_IP)" || (echo "Wi-Fi IP was not found on en0. Connect to Wi-Fi or use normal make back / make front."; exit 1)
 
-.PHONY: help setup back back-once front open back-lan front-lan open-lan back-docker front-docker open-docker stop-docker clean-docker schemio-build schemio-test format test test-e2e-docker deps-update-safe deps-update-latest
+.PHONY: help setup back back-once front open back-lan front-lan open-lan back-docker front-docker open-docker stop-docker clean-docker schemio-build schemio-test schemio-playground-build format test test-e2e-docker deps-update-safe deps-update-latest
 
 help:
 	@printf "Available commands:\n"
@@ -41,6 +41,7 @@ help:
 	@printf "  make clean-docker Stop the local Docker test containers and delete their images and data\n"
 	@printf "  make schemio-build Build the Schemio command-line interpreter\n"
 	@printf "  make schemio-test Run the Schemio interpreter tests\n"
+	@printf "  make schemio-playground-build Build the standalone Schemio web component\n"
 	@printf "  make deps-update-safe Update backend and frontend deps in the safe supported way\n"
 	@printf "  make deps-update-latest Update backend deps to the newest available versions\n"
 	@printf "  make format  Format backend and frontend code\n"
@@ -98,6 +99,9 @@ schemio-build:
 
 schemio-test:
 	cd schemio && PATH="$(RUST_TOOLCHAIN_BIN):$$PATH" $(RUST_CARGO) test
+
+schemio-playground-build:
+	cd frontend && npm run build:playground
 
 deps-update-safe:
 	uv add --bounds major $(PY_RUNTIME_DEPS)

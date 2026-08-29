@@ -183,6 +183,15 @@ function tokenize(source: string): Token[] {
   let column = 1;
   let index = 0;
 
+  if (source.startsWith("#!")) {
+    const newline = source.indexOf("\n");
+    if (newline === -1) {
+      return tokens;
+    }
+    index = newline + 1;
+    line = 2;
+  }
+
   while (index < source.length) {
     const char = source[index];
     if (char === "\n") {

@@ -1,0 +1,60 @@
+#!/bin/sh
+# This template turns a Schemio submission into an executable Ejudge program.
+# Edit it when the Schemio CLI or Ejudge build-script interface changes.
+# Copy it beside schemio-version.in in Ejudge's compile/scripts/in directory.
+
+LANG_CONFIG_DIR="@lang_config_dir@"
+[ "${EJUDGE_LANG_CONFIG}" = "" ] && EJUDGE_LANG_CONFIG="${LANG_CONFIG_DIR}/schemio.cfg"
+
+if [ -f "${EJUDGE_LANG_CONFIG}" ]
+then
+  . "${EJUDGE_LANG_CONFIG}"
+else
+  version="unknown"
+  SCHEMIOPATH="/opt/ejudge/schemio"
+fi
+
+if [ x"${version}" = x ]
+then
+  echo "This language is not supported." >&2
+  exit 1
+fi
+
+if [ "$#" -lt 2 ]
+then
+  echo "Usage: schemio <input> <output> [property-file]" >&2
+  exit 1
+fi
+
+if [ "${EJUDGE_BUILD_SCRIPT}" != "" ]
+then
+  export EJUDGE_LANGUAGE="schemio"
+  export EJUDGE_COMPILER="${SCHEMIOPATH}"
+  exec "${EJUDGE_BUILD_SCRIPT}" "$@"
+fi
+
+if [ "${EJUDGE_OPT_BUILD_SCRIPT}" != "" -a -x "${EJUDGE_OPT_BUILD_SCRIPT}" ]
+then
+  export EJUDGE_LANGUAGE="schemio"
+  export EJUDGE_COMPILER="${SCHEMIOPATH}"
+  exec "${EJUDGE_OPT_BUILD_SCRIPT}" "$@"
+fi
+
+if [ "${EJUDGE_FLAGS}" != "" ]
+then
+  echo "Schemio does not support EJUDGE_FLAGS." >&2
+  exit 1
+fi
+
+if [ x"${EJUDGE_EXE_PROPERTIES}" = x1 ]
+then
+  [ "$#" -ge 3 ] || { echo "A property file is required." >&2; exit 1; }
+  cp -p "$1" "$2" || exit 1
+  chmod +x "$2" || exit 1
+  echo '{ "start_cmd": "'"${SCHEMIOPATH}"'", "start_args": ["'"${SCHEMIOPATH}"'"] }' > "$3"
+  exit 0
+fi
+
+printf '#! %s\n' "${SCHEMIOPATH}" > "$2" || exit 1
+cat "$1" >> "$2" || exit 1
+chmod +x "$2" || exit 1

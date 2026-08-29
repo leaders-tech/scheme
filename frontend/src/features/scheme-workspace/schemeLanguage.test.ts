@@ -45,6 +45,17 @@ end
     expect(evaluateMainScheme(source, {})?.outputs).toEqual({ left: 0, right: 1 });
   });
 
+  it("accepts a Unix shebang before a program", () => {
+    const source = `#!/opt/ejudge/schemio
+scheme (a) main (out):
+ (a) not (out)
+end
+`;
+
+    expect(analyzeSchemeSource(source).isValid).toBe(true);
+    expect(evaluateMainScheme(source, { a: 0 })?.outputs).toEqual({ out: 1 });
+  });
+
   it("reports recursive usage as an error", () => {
     const source = `
 scheme (x) a (out):

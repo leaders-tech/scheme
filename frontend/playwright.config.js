@@ -20,6 +20,7 @@ export default defineConfig({
     testDir: "./tests/e2e",
     use: {
         baseURL: frontendUrl,
+        channel: process.env.PLAYWRIGHT_CHANNEL || "chrome",
     },
     webServer: [
         {

@@ -33,6 +33,19 @@ def test_backend_uses_first_scheme_as_main() -> None:
     assert evaluate_main_scheme(parsed, {"a": 1, "b": 0}) == [1]
 
 
+def test_backend_accepts_a_unix_shebang_before_a_program() -> None:
+    parsed, diagnostics = parse_and_validate_main_scheme(
+        "#!/opt/ejudge/schemio\n"
+        "scheme (a) main (out):\n"
+        " (a) not (out)\n"
+        "end\n"
+    )
+
+    assert diagnostics == []
+    assert parsed is not None
+    assert evaluate_main_scheme(parsed, {"a": 0}) == [1]
+
+
 def test_backend_reports_duplicate_writes() -> None:
     _, diagnostics = parse_and_validate_main_scheme(
         "\n".join(

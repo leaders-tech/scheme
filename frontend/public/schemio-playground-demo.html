@@ -1,0 +1,25 @@
+<!-- This page tests the standalone Schemio web component in a real browser. -->
+<!-- Edit it when the public embed API changes. Copy it into a course page as a starting point. -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/pwa-192.svg" type="image/svg+xml" />
+    <title>Schemio playground demo</title>
+    <script type="module" src="/embed-dist/schemio-playground.js"></script>
+  </head>
+  <body>
+    <schemio-playground storage-key="schemio-playground-demo-xor">
+      <script type="text/plain">
+scheme (a b) xor (out):
+ local either both not_both
+ (a b) or (either)
+ (a b) and (both)
+ (both) not (not_both)
+ (either not_both) and (out)
+end
+      </script>
+    </schemio-playground>
+  </body>
+</html>

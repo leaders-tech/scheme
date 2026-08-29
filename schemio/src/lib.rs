@@ -205,9 +205,20 @@ fn tokenize(source: &str) -> Result<Vec<Token>, Vec<Diagnostic>> {
     let mut chars = source.chars().peekable();
     let mut line = 1;
     let mut column = 1;
+    let mut in_shebang = source.starts_with("#!");
 
     while let Some(character) = chars.next() {
         let position = Position { line, column };
+        if in_shebang {
+            if character == '\n' {
+                in_shebang = false;
+                line += 1;
+                column = 1;
+            } else {
+                column += 1;
+            }
+            continue;
+        }
         if character == '\n' {
             line += 1;
             column = 1;
@@ -952,6 +963,13 @@ mod tests {
         let compiled = compile(source).expect("program must compile");
         assert_eq!(compiled.main_name(), "main");
         assert_eq!(compiled.evaluate(&[1, 0]), vec![1]);
+    }
+
+    #[test]
+    fn accepts_a_unix_shebang_before_a_program() {
+        let source = "#!/opt/ejudge/schemio\nscheme (a) main (out):\n (a) not (out)\nend\n";
+        let compiled = compile(source).expect("a shebang-wrapped program must compile");
+        assert_eq!(compiled.evaluate(&[0]), vec![1]);
     }
 
     #[test]

@@ -1,0 +1,63 @@
+/* This file styles the isolated Schemio playground inside its Shadow DOM. */
+/* Edit it when the embedded widget needs a visual change. Copy it for a similar standalone widget. */
+
+:host {
+  color: #e2e8f0;
+  display: block;
+  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+.schemio-playground {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 18px;
+  padding: 20px;
+}
+
+.schemio-playground__header, .schemio-playground__debugger-title {
+  align-items: start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.schemio-playground h2, .schemio-playground h3, .schemio-playground h4, .schemio-playground p { margin: 0; }
+.schemio-playground h2 { font-size: 1.25rem; }
+.schemio-playground h3 { font-size: 1rem; }
+.schemio-playground h4 { color: #cbd5e1; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
+.schemio-playground__header p, .schemio-playground__debugger-title p, .schemio-playground__storage { color: #94a3b8; font-size: .88rem; margin-top: 4px; }
+
+.schemio-playground__reset {
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 9px;
+  color: #f8fafc;
+  cursor: pointer;
+  font: inherit;
+  padding: 8px 10px;
+}
+
+.schemio-playground__reset:hover { background: #334155; }
+.schemio-playground__editor { border: 1px solid #334155; border-radius: 12px; margin-top: 18px; overflow: hidden; }
+.schemio-playground__diagnostics, .schemio-playground__debugger { background: #172033; border-radius: 12px; margin-top: 16px; padding: 14px; }
+.schemio-playground__diagnostics ul { color: #fecaca; margin: 10px 0 0; padding-left: 20px; }
+.schemio-playground__success { color: #86efac; font-size: .9rem; margin-top: 8px !important; }
+.schemio-playground__blocked { color: #cbd5e1; margin-top: 14px !important; }
+
+.schemio-playground__signals { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 14px; }
+.schemio-playground__signal-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
+.schemio-playground__bit { align-items: center; background: #020617; border: 1px solid #334155; border-radius: 9px; color: #f8fafc; display: flex; flex-direction: column; font: inherit; min-width: 72px; padding: 8px 12px; }
+button.schemio-playground__bit { cursor: pointer; }
+.schemio-playground__bit--on { background: #34d399; border-color: #6ee7b7; color: #052e2b; }
+.schemio-playground__bit span { font-size: .75rem; opacity: .72; }
+.schemio-playground__bit strong { font-size: 1.3rem; }
+.schemio-playground__output { background: #111827; }
+.schemio-playground__storage { margin-top: 14px !important; }
+
+@media (max-width: 600px) {
+  .schemio-playground { border-radius: 12px; padding: 14px; }
+  .schemio-playground__header, .schemio-playground__debugger-title { flex-direction: column; }
+  .schemio-playground__signals { grid-template-columns: 1fr; }
+}
