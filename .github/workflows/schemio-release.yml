@@ -66,10 +66,9 @@ jobs:
           set -o pipefail
           mapfile -t files < <(find release-files -type f \( -name '*.tar.gz' -o -name '*.tar.gz.sha256' \) | sort)
           test "${#files[@]}" -eq 4
-          gh release create "${GITHUB_REF_NAME}" "${files[@]}" --generate-notes 2>&1 | tee release-output.txt
-          status="${PIPESTATUS[0]}"
-          if [ "$status" -ne 0 ]; then
+          if ! gh release create "${GITHUB_REF_NAME}" "${files[@]}" --generate-notes > release-output.txt 2>&1; then
+            cat release-output.txt
             summary="$(tail -n 20 release-output.txt | tr '\n' ' ')"
             echo "::error title=GitHub Release failed::$summary"
-            exit "$status"
+            exit 1
           fi
