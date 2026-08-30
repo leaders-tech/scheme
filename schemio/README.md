@@ -121,7 +121,7 @@ import "@leaders-tech/schemio-playground";
 ```
 
 Before the first npm publication, or to use the repository version directly,
-pnpm can build it from GitHub:
+install its ready-built bundle from GitHub:
 
 ```bash
 pnpm add github:leaders-tech/scheme#path:/frontend

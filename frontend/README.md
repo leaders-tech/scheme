@@ -24,8 +24,9 @@ install it directly from GitHub:
 pnpm add github:leaders-tech/scheme#path:/frontend
 ```
 
-The GitHub form builds the component during installation. Use a versioned npm
-release for production course sites.
+The repository includes the ready-built component, so the GitHub form does not
+run installation scripts. Use a versioned npm release for production course
+sites.
 
 ## Use it
 

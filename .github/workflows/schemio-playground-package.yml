@@ -43,6 +43,8 @@ jobs:
       - name: Build the web component
         working-directory: frontend
         run: npm run build:playground
+      - name: Check that the tracked bundle is current
+        run: git diff --exit-code -- frontend/embed-dist
       - name: Pack the exact npm package
         working-directory: frontend
         run: |
