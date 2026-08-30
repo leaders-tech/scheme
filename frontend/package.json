@@ -40,8 +40,7 @@
     "test:watch": "vitest",
     "test:e2e": "npm run build:playground && playwright test",
     "test:e2e:docker": "sh ./scripts/test-e2e-docker.sh",
-    "prepack": "npm run build:playground",
-    "pack:check": "npm pack --dry-run",
+    "pack:check": "npm run build:playground && npm pack --dry-run",
     "format": "prettier --write ."
   },
   "devDependencies": {
