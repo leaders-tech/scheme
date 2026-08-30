@@ -127,6 +127,17 @@ GitHub:
 pnpm add github:leaders-tech/scheme#path:/frontend
 ```
 
+For a plain static HTML page without pnpm, download the browser archive from
+the [Schemio releases page](https://github.com/leaders-tech/scheme/releases).
+Unpack `schemio-playground-<version>-browser.tar.gz` next to the page, keep
+its `schemio-playground.js` and `chunks/` together, then load it with:
+
+```html
+<script type="module" src="./schemio-playground/schemio-playground.js"></script>
+```
+
+The archive includes a `README.md` with the full static-page example.
+
 On a page, add one component for each example:
 
 ```html

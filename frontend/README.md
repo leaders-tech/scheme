@@ -58,12 +58,37 @@ show a non-editable program.
 The element dispatches a bubbling `schemio-change` event after every edit. Its
 `event.detail` contains `{ source, isValid }`.
 
+## Use direct browser files
+
+Every `schemio-playground-v…` GitHub Release also contains
+`schemio-playground-<version>-browser.tar.gz` and its SHA-256 checksum. Download
+the archive from the [releases page](https://github.com/leaders-tech/scheme/releases),
+unpack it next to the static course page, and rename its directory to
+`schemio-playground` if desired:
+
+```bash
+tar -xzf schemio-playground-<version>-browser.tar.gz
+mv schemio-playground-<version>-browser schemio-playground
+```
+
+Keep `schemio-playground.js` and `chunks/` together. From a neighbouring HTML
+page served by the same static website, load it with:
+
+```html
+<script type="module" src="./schemio-playground/schemio-playground.js"></script>
+```
+
+The archive includes its own `README.md` with the complete copy-paste example.
+
 ## Release the package
 
 The GitHub Actions workflow publishes the package after a tag named
 `schemio-playground-v<package version>` is pushed, for example
 `schemio-playground-v0.1.0`. It first runs the tests, builds the package, and
 installs the resulting tarball with pnpm.
+
+For the same tag, it also attaches a browser-ready archive and SHA-256 checksum
+to the GitHub Release.
 
 The package uses npm Trusted Publishing: npm must link this package to
 `leaders-tech/scheme` and the `schemio-playground-package.yml` workflow, with
