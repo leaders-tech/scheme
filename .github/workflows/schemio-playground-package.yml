@@ -61,7 +61,7 @@ jobs:
           test -n "$(find node_modules/@leaders-tech/schemio-playground/embed-dist/chunks -name '*.js' -print -quit)"
 
   publish:
-    if: startsWith(github.ref, 'refs/tags/schemio-playground-v') && secrets.NPM_TOKEN != ''
+    if: startsWith(github.ref, 'refs/tags/schemio-playground-v')
     needs: verify
     runs-on: ubuntu-latest
     permissions:
@@ -83,8 +83,11 @@ jobs:
       - name: Install package development dependencies
         working-directory: frontend
         run: npm ci
+      - name: Build the web component
+        working-directory: frontend
+        run: npm run build:playground
+      - name: Check that the tracked bundle is current
+        run: git diff --exit-code -- frontend/embed-dist
       - name: Publish to npm
         working-directory: frontend
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public --provenance
