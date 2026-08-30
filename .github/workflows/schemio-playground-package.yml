@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - uses: pnpm/action-setup@v4
@@ -98,7 +98,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org
           cache: npm
           cache-dependency-path: frontend/package-lock.json
@@ -112,7 +112,7 @@ jobs:
         run: git diff --exit-code -- frontend/embed-dist
       - name: Publish to npm
         working-directory: frontend
-        run: npm publish --access public --provenance
+        run: npm publish --access public
 
   browser-release:
     if: startsWith(github.ref, 'refs/tags/schemio-playground-v')
@@ -128,6 +128,7 @@ jobs:
       - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         shell: bash
         run: |
           set -o pipefail
