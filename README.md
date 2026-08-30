@@ -84,7 +84,7 @@ If you get "command not found", install Rust with [rustup](https://rustup.rs/), 
 
 ### Use Schemio in Ejudge
 
-The repository includes ready-to-copy Ejudge templates for the Schemio command-line interpreter. They install the Linux binary at `/opt/ejudge/schemio`, add the `.sch` language, and let Ejudge generate its own configuration files. Follow the complete [Ejudge installation guide](schemio/README.md#use-schemio-in-ejudge).
+The repository includes ready-to-copy Ejudge templates for the Schemio command-line interpreter. They install the Linux binary at `/opt/ejudge/schemio`, add the `.sch` language, and let Ejudge generate its own configuration files. Schemio programs may use `#` comments, including Ejudge's generated `#!` line. Follow the complete [Ejudge installation guide](schemio/README.md#use-schemio-in-ejudge).
 
 ### Embed a Schemio playground in a course page
 

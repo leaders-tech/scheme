@@ -183,19 +183,20 @@ function tokenize(source: string): Token[] {
   let column = 1;
   let index = 0;
 
-  if (source.startsWith("#!")) {
-    const newline = source.indexOf("\n");
-    if (newline === -1) {
-      return tokens;
-    }
-    index = newline + 1;
-    line = 2;
-  }
-
   while (index < source.length) {
     const char = source[index];
     if (char === "\n") {
       index += 1;
+      line += 1;
+      column = 1;
+      continue;
+    }
+    if (char === "#") {
+      const newline = source.indexOf("\n", index);
+      if (newline === -1) {
+        break;
+      }
+      index = newline + 1;
       line += 1;
       column = 1;
       continue;
@@ -642,6 +643,11 @@ function tokenizeForEditor(source: string): LooseToken[] {
     const char = source[index];
     if (/\s/.test(char)) {
       index += 1;
+      continue;
+    }
+    if (char === "#") {
+      const newline = source.indexOf("\n", index);
+      index = newline === -1 ? source.length : newline + 1;
       continue;
     }
     if (char === "(") {

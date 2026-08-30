@@ -13,7 +13,7 @@ cargo build --release
 ./target/release/schemio program.sch < input.txt
 ```
 
-The first `scheme` definition in the program file is the main scheme. Each non-empty input line must contain exactly one `0` or `1` for each main-scheme input. Output bits are printed in declaration order, separated by spaces.
+The first `scheme` definition in the program file is the main scheme. Each non-empty input line must contain exactly one `0` or `1` for each main-scheme input. Output bits are printed in declaration order, separated by spaces. A `#` starts a comment that continues to the end of its line; this includes `#!` shebang lines.
 
 For example, a two-input XOR program can read this input:
 
@@ -53,12 +53,12 @@ script directory is not `/home/ejudge/compile/scripts`, replace
 
    ```bash
    sudo install -d /opt/ejudge
-   sudo install -m 755 schemio-schemio-v0.1.0-x86_64-unknown-linux-gnu/schemio /opt/ejudge/schemio
+   sudo install -m 755 schemio-schemio-v0.1.1-x86_64-unknown-linux-gnu/schemio /opt/ejudge/schemio
    /opt/ejudge/schemio --version
    ```
 
    Use the directory name from the release that you downloaded; the example
-   above is for version 0.1.0.
+   above is for version 0.1.1.
 
 2. Copy the templates into Ejudge's local template directory. They must be
    readable by the `ejudge` user:
@@ -78,6 +78,16 @@ script directory is not `/home/ejudge/compile/scripts`, replace
    sudo -u ejudge /opt/ejudge/bin/ejudge-configure-compilers --batch --with-schemio=/opt/ejudge/schemio
    ```
 
+   Ejudge 3.14.0 build `8232887e4` has a bug that leaves an unregistered
+   custom language out of `compile.cfg`. Before the command above, open
+   `/home/ejudge/compile/scripts/lang_ids.cfg` (create it if necessary) and
+   add this line, without spaces around `=`. Keep any existing lines in that
+   file:
+
+   ```text
+   schemio=90
+   ```
+
 4. Check the generated configuration and restart Ejudge using the normal
    command for this server:
 
@@ -88,7 +98,8 @@ script directory is not `/home/ejudge/compile/scripts`, replace
 
    Then add **schemio** to the contest in `serve-control` and make one test
    submission before opening it to students. The generated executable starts
-   with `#!/opt/ejudge/schemio`; therefore the binary must remain at that path
+   with a `#! /opt/ejudge/schemio` shebang, which Schemio accepts as a comment;
+   therefore the binary must remain at that path
    and must be executable by the Ejudge run user. Schemio has no compiler
    flags, so leave the contest's compiler-flags field empty for this language.
 

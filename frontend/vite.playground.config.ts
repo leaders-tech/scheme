@@ -5,9 +5,14 @@ Copy it when another independently deployable frontend widget is needed.
 */
 
 import { fileURLToPath, URL } from "node:url";
+import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 export default defineConfig({
+  define: {
+    "process.env.NODE_ENV": JSON.stringify("production"),
+  },
+  plugins: [react()],
   build: {
     emptyOutDir: true,
     lib: {

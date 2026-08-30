@@ -205,23 +205,23 @@ fn tokenize(source: &str) -> Result<Vec<Token>, Vec<Diagnostic>> {
     let mut chars = source.chars().peekable();
     let mut line = 1;
     let mut column = 1;
-    let mut in_shebang = source.starts_with("#!");
 
     while let Some(character) = chars.next() {
         let position = Position { line, column };
-        if in_shebang {
-            if character == '\n' {
-                in_shebang = false;
-                line += 1;
-                column = 1;
-            } else {
-                column += 1;
-            }
-            continue;
-        }
         if character == '\n' {
             line += 1;
             column = 1;
+            continue;
+        }
+        if character == '#' {
+            while let Some(next) = chars.next() {
+                if next == '\n' {
+                    line += 1;
+                    column = 1;
+                    break;
+                }
+                column += 1;
+            }
             continue;
         }
         if character.is_whitespace() {
@@ -966,9 +966,9 @@ mod tests {
     }
 
     #[test]
-    fn accepts_a_unix_shebang_before_a_program() {
-        let source = "#!/opt/ejudge/schemio\nscheme (a) main (out):\n (a) not (out)\nend\n";
-        let compiled = compile(source).expect("a shebang-wrapped program must compile");
+    fn accepts_comments_and_a_unix_shebang() {
+        let source = "#! /opt/ejudge/schemio\n# Negate a single input.\nscheme (a) main (out): # the main scheme\n (a) not (out) # invert it\nend # done\n";
+        let compiled = compile(source).expect("a commented program must compile");
         assert_eq!(compiled.evaluate(&[0]), vec![1]);
     }
 

@@ -45,11 +45,12 @@ end
     expect(evaluateMainScheme(source, {})?.outputs).toEqual({ left: 0, right: 1 });
   });
 
-  it("accepts a Unix shebang before a program", () => {
-    const source = `#!/opt/ejudge/schemio
-scheme (a) main (out):
- (a) not (out)
-end
+  it("accepts comments and a Unix shebang", () => {
+    const source = `#! /opt/ejudge/schemio
+# Negate one input.
+scheme (a) main (out): # the main scheme
+ (a) not (out) # invert it
+end # done
 `;
 
     expect(analyzeSchemeSource(source).isValid).toBe(true);

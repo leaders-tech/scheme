@@ -90,17 +90,22 @@ class SchemioPlaygroundElement extends HTMLElement {
   }
 
   private async mount(host: HTMLElement) {
-    const { mountSchemioPlayground } = (await import("./SchemioPlaygroundMount")) as { mountSchemioPlayground: MountPlayground };
-    const storageKey = this.getAttribute("storage-key") ?? `schemio-playground:${window.location.pathname}:${this.id || elementPosition(this)}`;
-    this.cleanup = mountSchemioPlayground(host, {
-      initialSource: sourceFromElement(this),
-      storageKey,
-      persist: this.getAttribute("storage") !== "off",
-      readOnly: this.hasAttribute("readonly"),
-      onSourceChange: (source, isValid) => {
-        this.dispatchEvent(new CustomEvent("schemio-change", { bubbles: true, composed: true, detail: { source, isValid } }));
-      },
-    }).unmount;
+    try {
+      const { mountSchemioPlayground } = (await import("./SchemioPlaygroundMount")) as { mountSchemioPlayground: MountPlayground };
+      const storageKey = this.getAttribute("storage-key") ?? `schemio-playground:${window.location.pathname}:${this.id || elementPosition(this)}`;
+      this.cleanup = mountSchemioPlayground(host, {
+        initialSource: sourceFromElement(this),
+        storageKey,
+        persist: this.getAttribute("storage") !== "off",
+        readOnly: this.hasAttribute("readonly"),
+        onSourceChange: (source, isValid) => {
+          this.dispatchEvent(new CustomEvent("schemio-change", { bubbles: true, composed: true, detail: { source, isValid } }));
+        },
+      }).unmount;
+    } catch (error) {
+      host.textContent = "Schemio playground could not load. Please reload the page.";
+      console.error("Could not load the Schemio playground.", error);
+    }
   }
 }
 

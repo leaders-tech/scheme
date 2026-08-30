@@ -26,14 +26,17 @@ test("standalone playground restores code and evaluates input bits", async ({ pa
   await page.goto("/schemio-playground-demo.html");
 
   const playground = page.locator("schemio-playground");
-  await page.waitForTimeout(1000);
-  const playgroundText = await playground.evaluate((element) => element.shadowRoot?.textContent ?? "");
-  expect(playgroundText, browserErrors.join("\n")).toContain("Schemio playground");
+  await expect
+    .poll(
+      () => playground.evaluate((element) => element.shadowRoot?.textContent ?? ""),
+      { message: browserErrors.join("\n"), timeout: 15_000 },
+    )
+    .toContain("Schemio playground");
   expect(browserErrors, failedResponses.join("\n")).toEqual([]);
   await playground.getByRole("button", { name: "a 0" }).click();
   await expect(playground.getByLabel("out 1")).toBeVisible();
 
-  const savedSource = "scheme () saved ():\nend\n";
+  const savedSource = "#! /opt/ejudge/schemio\n# A saved Schemio program.\nscheme (a) saved (out): # main scheme\n (a) not (out) # invert input\nend\n";
   await page.evaluate(
     ({ key, source }) => window.localStorage.setItem(key, source),
     { key: storageKey, source: savedSource },
@@ -41,8 +44,15 @@ test("standalone playground restores code and evaluates input bits", async ({ pa
   await page.reload();
 
   await expect
-    .poll(() =>
-      page.locator("schemio-playground").evaluate((element) => element.shadowRoot?.querySelector(".cm-content")?.textContent ?? ""),
+    .poll(
+      () =>
+        page.locator("schemio-playground").evaluate((element) => {
+          const lines = Array.from(element.shadowRoot?.querySelectorAll(".cm-line") ?? []).map((line) => line.textContent ?? "");
+          return lines.filter((line) => line.length > 0).join("\n");
+        }),
+      { timeout: 15_000 },
     )
-    .toBe(savedSource);
+    .toBe(savedSource.trimEnd());
+  await expect(playground.getByLabel("out 1")).toBeVisible();
+  expect(browserErrors, failedResponses.join("\n")).toEqual([]);
 });

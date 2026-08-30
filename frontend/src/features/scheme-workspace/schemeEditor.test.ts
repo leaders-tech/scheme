@@ -31,6 +31,16 @@ end
     expect(tokens.find((token) => token.text === "(")?.kind).toBe("punctuation");
   });
 
+  it("highlights comments and does not offer completions inside them", () => {
+    const source = `scheme (a) main (out): # describe the main scheme
+ (a) not (out)
+end
+`;
+
+    expect(classifySchemeTokens(source).find((token) => token.text === "# describe the main scheme")?.kind).toBe("comment");
+    expect(collectSchemeCompletions(source, source.indexOf("scheme", 25) + 6)).toEqual([]);
+  });
+
   it("suggests only an opening parenthesis after the scheme keyword", () => {
     const source = "scheme ";
 

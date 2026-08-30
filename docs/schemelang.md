@@ -51,6 +51,23 @@ end
 
 Это значит, что внешний интерфейс `.SCH`-файла определяется первой схемой в файле. Главная схема может вызывать вспомогательные схемы, описанные ниже неё.
 
+### 2.2. Комментарии
+
+Символ `#` начинает комментарий. Всё от него до конца текущей строки
+игнорируется. Комментарий можно поставить на отдельной строке или после
+описания схемы, оператора либо `end`.
+
+```scheme
+# Инвертировать вход.
+scheme (a) invert (out): # главная схема
+ (a) not (out) # единственный оператор
+end # конец схемы
+```
+
+Строка, начинающаяся с `#!`, тоже является комментарием. Поэтому файлы,
+которым Ejudge добавил строку `#! /opt/ejudge/schemio`, остаются корректными
+программами Schemio.
+
 Пример:
 
 ```scheme
@@ -481,7 +498,7 @@ end
 - предопределённая схема `one` имеет 0 входов и 1 выход, на котором выдаёт `1`;
 - константы задаются вызовами `() zero (signal)` и `() one (signal)`;
 - рекурсивное использование схем не допускается и считается синтаксической ошибкой;
-- текстовых комментариев в примерах нет;
+- комментарии начинаются с `#` и продолжаются до конца строки;
 - типы данных явно не записываются;
 - объявления входов, выходов и локальных сигналов не содержат типов и направлений кроме позиции в заголовке или `local`.
 
@@ -490,17 +507,17 @@ end
 Ниже удобная EBNF-запись именно того синтаксиса, который подтверждён примерами.
 
 ```ebnf
-file            = scheme_def { scheme_def } ;
+file            = spacing scheme_def { spacing scheme_def } spacing ;
 
-scheme_def      = "scheme" ws* signal_list ws* scheme_name ws* signal_list ws* ":" 
-                  ws* [ local_section ] { statement }
-                  ws* "end" ;
+scheme_def      = "scheme" spacing signal_list spacing scheme_name spacing signal_list spacing ":"
+                  spacing [ local_section ] { statement }
+                  spacing "end" ;
 
-local_section   = "local" ws+ identifier { ws+ identifier } ws* ;
+local_section   = "local" spacing1 identifier { spacing1 identifier } spacing ;
 
-statement       = signal_list ws* scheme_name ws* signal_list ws* ;
+statement       = signal_list spacing scheme_name spacing signal_list spacing ;
 
-signal_list     = "(" ws* [ identifier { ws+ identifier } ] ws* ")" ;
+signal_list     = "(" spacing [ identifier { spacing1 identifier } ] spacing ")" ;
 
 scheme_name     = identifier ;
 
@@ -508,7 +525,13 @@ identifier      = ident_char { ident_char } ;
 
 ident_char      = letter | digit | "_" ;
 
-ws              = " " | "\t" | "\n" | "\r" ;
+spacing         = { whitespace | comment } ;
+
+spacing1        = whitespace | comment { whitespace | comment } ;
+
+comment         = "#" { any character except "\n" } [ "\n" ] ;
+
+whitespace      = " " | "\t" | "\n" | "\r" ;
 
 letter          = [a-zA-Z] ;
 
@@ -518,7 +541,7 @@ digit           = [0-9] ;
 Практическое уточнение к этой EBNF:
 
 - `identifier` в примерах иногда состоит только из цифр, поэтому цифра в начале допустима;
-- `ws` включает пробелы, табы и переводы строк;
+- `spacing` включает пробелы, табы, переводы строк и комментарии;
 - перенос строки не разделяет синтаксис жёстко: важны сами токены, а не строка.
 
 ## 16. Рабочие шаблоны

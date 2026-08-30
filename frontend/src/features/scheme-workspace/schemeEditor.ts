@@ -10,7 +10,7 @@ import { Prec, RangeSetBuilder, type Extension } from "@codemirror/state";
 import { Decoration, EditorView, ViewPlugin, keymap, type DecorationSet, type ViewUpdate } from "@codemirror/view";
 import { BUILTIN_SCHEME_NAMES, collectEditorSymbols } from "./schemeLanguage";
 
-type ScannedTokenType = "word" | "lparen" | "rparen" | "colon";
+type ScannedTokenType = "word" | "lparen" | "rparen" | "colon" | "comment";
 
 type ScannedToken = {
   type: ScannedTokenType;
@@ -23,7 +23,7 @@ export type SchemeHighlightToken = {
   text: string;
   from: number;
   to: number;
-  kind: "keyword" | "builtin" | "helper" | "signal" | "punctuation" | "identifier";
+  kind: "keyword" | "builtin" | "helper" | "signal" | "punctuation" | "identifier" | "comment";
 };
 
 type CompletionKind = "keyword" | "function" | "variable" | "text";
@@ -55,6 +55,7 @@ const TOKEN_CLASS_NAMES: Record<SchemeHighlightToken["kind"], string> = {
   signal: "cm-scheme-signal",
   punctuation: "cm-scheme-punctuation",
   identifier: "cm-scheme-identifier",
+  comment: "cm-scheme-comment",
 };
 
 function scanTokens(source: string): ScannedToken[] {
@@ -64,6 +65,14 @@ function scanTokens(source: string): ScannedToken[] {
     const char = source[index];
     if (/\s/.test(char)) {
       index += 1;
+      continue;
+    }
+    if (char === "#") {
+      const start = index;
+      while (index < source.length && source[index] !== "\n") {
+        index += 1;
+      }
+      tokens.push({ type: "comment", value: source.slice(start, index), from: start, to: index });
       continue;
     }
     if (char === "(") {
@@ -94,6 +103,12 @@ function scanTokens(source: string): ScannedToken[] {
   return tokens;
 }
 
+function isCommentOffset(source: string, offset: number) {
+  const lineStart = source.lastIndexOf("\n", Math.max(offset - 1, 0)) + 1;
+  const commentStart = source.indexOf("#", lineStart);
+  return commentStart >= lineStart && commentStart < offset;
+}
+
 function buildRangeKindMap(source: string) {
   const symbols = collectEditorSymbols(source, 0);
   const helperNames = new Set(symbols.helperSchemeNames);
@@ -118,7 +133,9 @@ export function classifySchemeTokens(source: string): SchemeHighlightToken[] {
   return scanTokens(source).map((token) => {
     const key = `${token.from}:${token.to}`;
     let kind: SchemeHighlightToken["kind"] = "identifier";
-    if (token.type !== "word") {
+    if (token.type === "comment") {
+      kind = "comment";
+    } else if (token.type !== "word") {
       kind = "punctuation";
     } else if (KEYWORDS.includes(token.value as (typeof KEYWORDS)[number])) {
       kind = "keyword";
@@ -216,7 +233,7 @@ function readCompletedSignalList(tokens: ScannedToken[], index: number): number 
 }
 
 function detectEditorCursorContext(source: string, offset: number): EditorCursorContext | null {
-  const tokens = scanTokens(source).filter((token) => token.to <= offset);
+  const tokens = scanTokens(source).filter((token) => token.type !== "comment" && token.to <= offset);
   const lineBlank = currentLineIsBlank(source, offset);
   let index = 0;
   let state: "top-level" | "scheme-input-list" | "scheme-name" | "scheme-output-list" | "scheme-colon" | "body-start" | "local-name" | "statement-input-list" | "statement-callee" | "statement-output-list" =
@@ -423,6 +440,9 @@ function collectFallbackCompletions(source: string, offset: number): SchemeEdito
 }
 
 export function collectSchemeCompletions(source: string, offset: number): SchemeEditorCompletion[] {
+  if (isCommentOffset(source, offset)) {
+    return [];
+  }
   const symbols = collectEditorSymbols(source, offset);
   const prefix = prefixBefore(source, offset);
   const cursorContext = normalizeEditorCursorContext(source, offset, detectEditorCursorContext(source, prefix.from));
@@ -505,6 +525,9 @@ function toCodeMirrorCompletion(item: SchemeEditorCompletion): Completion {
 }
 
 function schemeCompletionSource(context: CompletionContext): CompletionResult | null {
+  if (isCommentOffset(context.state.doc.toString(), context.pos)) {
+    return null;
+  }
   const source = context.state.doc.toString();
   const prefix = prefixBefore(source, context.pos);
   let options = collectSchemeCompletions(source, context.pos)
@@ -537,6 +560,7 @@ export function schemeLanguageSupport(): Extension[] {
       ".cm-scheme-signal": { color: "#b45309" },
       ".cm-scheme-punctuation": { color: "#475569" },
       ".cm-scheme-identifier": { color: "#111827" },
+      ".cm-scheme-comment": { color: "#64748b", fontStyle: "italic" },
     }),
     schemeHighlightPlugin,
     Prec.highest(
