@@ -1,6 +1,6 @@
 {
   "name": "@leaders-tech/schemio-playground",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "A lazy-loaded web component with a Schemio editor and live logic-scheme debugger.",
   "type": "module",
   "exports": {

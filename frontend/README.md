@@ -84,7 +84,7 @@ The archive includes its own `README.md` with the complete copy-paste example.
 
 The GitHub Actions workflow publishes the package after a tag named
 `schemio-playground-v<package version>` is pushed, for example
-`schemio-playground-v0.1.0`. It first runs the tests, builds the package, and
+`schemio-playground-v0.1.2`. It first runs the tests, builds the package, and
 installs the resulting tarball with pnpm.
 
 For the same tag, it also attaches a browser-ready archive and SHA-256 checksum
