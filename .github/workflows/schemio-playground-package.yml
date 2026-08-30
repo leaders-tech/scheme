@@ -54,15 +54,17 @@ jobs:
       - name: Create browser release archive
         shell: bash
         run: |
+          set -euxo pipefail
           version="$(node -p 'require("./frontend/package.json").version')"
           archive_dir="schemio-playground-${version}-browser"
           mkdir "$archive_dir"
           cp -R frontend/embed-dist/. "$archive_dir/"
           cp frontend/browser-release-README.md "$archive_dir/README.md"
+          test -f "$archive_dir/schemio-playground.js"
+          test -d "$archive_dir/chunks"
+          find "$archive_dir/chunks" -type f -name '*.js' -print -quit | grep -q .
           tar -czf "$archive_dir.tar.gz" "$archive_dir"
           sha256sum "$archive_dir.tar.gz" > "$archive_dir.tar.gz.sha256"
-          tar -tzf "$archive_dir.tar.gz" | grep -qx "$archive_dir/schemio-playground.js"
-          tar -tzf "$archive_dir.tar.gz" | grep -q "^$archive_dir/chunks/.*\\.js$"
       - name: Upload browser release archive
         uses: actions/upload-artifact@v4
         with:
