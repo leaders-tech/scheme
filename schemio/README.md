@@ -105,22 +105,31 @@ script directory is not `/home/ejudge/compile/scripts`, replace
 
 ## Embed a playground on a course page
 
-Build the standalone web component from the `frontend` directory:
+After its first npm release, install the component in a TypeScript or
+JavaScript course application instead of copying its build output:
 
 ```bash
-npm run build:playground
+pnpm add @leaders-tech/schemio-playground
 ```
 
-This creates `frontend/embed-dist/`. Copy the **whole directory** to the
-static assets of the course site. The main `schemio-playground.js` file loads
-its CodeMirror editor lazily from the `chunks/` directory when a playground is
-near the viewport.
+Import it once in the application's browser entry point. The component bundle
+contains its editor and lazy-loaded chunks, so no React setup is required in
+the host application:
 
-On a page, load the module once and add one component for each example:
+```ts
+import "@leaders-tech/schemio-playground";
+```
+
+Before the first npm publication, or to use the repository version directly,
+pnpm can build it from GitHub:
+
+```bash
+pnpm add github:leaders-tech/scheme#path:/frontend
+```
+
+On a page, add one component for each example:
 
 ```html
-<script type="module" src="/s/schemio/schemio-playground.js"></script>
-
 <schemio-playground storage-key="cs0040-prob-a-xor">
   <script type="text/plain">
 scheme (a b) xor (out):
@@ -140,4 +149,5 @@ component uses the page path plus its `id` (or its position on the page), which
 can change when the page is edited. Add `storage="off"` to disable saving or
 `readonly` to show code without allowing changes. The component emits a
 `schemio-change` event with `{ source, isValid }` in `event.detail` after each
-edit.
+edit. The package release instructions are in
+[frontend/README.md](../frontend/README.md#release-the-package).

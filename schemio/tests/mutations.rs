@@ -11,6 +11,7 @@ fn mod2_source() -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
         .join("docs")
+        .join(".solutions")
         .join("14.SCH");
     fs::read_to_string(path).expect("read documented mod2 program")
 }

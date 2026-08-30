@@ -88,7 +88,7 @@ The repository includes ready-to-copy Ejudge templates for the Schemio command-l
 
 ### Embed a Schemio playground in a course page
 
-The frontend can also build a lazy-loaded `<schemio-playground>` web component for static course pages. It includes the editor, live input/output debugger, diagnostics, and browser-local saving. Follow the [embed guide](schemio/README.md#embed-a-playground-on-a-course-page).
+After its first npm release, install the lazy-loaded `<schemio-playground>` web component in a TypeScript or JavaScript application with `pnpm add @leaders-tech/schemio-playground`, then import it once. It includes the editor, live input/output debugger, diagnostics, and browser-local saving. The published package guide is in [frontend/README.md](frontend/README.md); the [embed guide](schemio/README.md#embed-a-playground-on-a-course-page) also covers direct installation from GitHub.
 
 ---
 

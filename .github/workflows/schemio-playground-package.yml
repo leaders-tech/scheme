@@ -1,0 +1,88 @@
+# This workflow verifies and publishes the installable Schemio playground package.
+# Edit it when the package name, publish registry, or release tag format changes.
+# Copy its verify-then-publish pattern for another small npm package in this repository.
+name: Schemio playground package
+
+on:
+  pull_request:
+    paths:
+      - "frontend/**"
+      - ".github/workflows/schemio-playground-package.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "frontend/**"
+      - ".github/workflows/schemio-playground-package.yml"
+    tags:
+      - "schemio-playground-v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - name: Install package development dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test
+      - name: Build the web component
+        working-directory: frontend
+        run: npm run build:playground
+      - name: Pack the exact npm package
+        working-directory: frontend
+        run: |
+          mkdir -p ../package-artifact
+          npm pack --pack-destination ../package-artifact
+      - name: Install the package with pnpm
+        shell: bash
+        run: |
+          mkdir package-consumer
+          cd package-consumer
+          pnpm init
+          pnpm add ../package-artifact/*.tgz
+          test -f node_modules/@leaders-tech/schemio-playground/embed-dist/schemio-playground.js
+          test -n "$(find node_modules/@leaders-tech/schemio-playground/embed-dist/chunks -name '*.js' -print -quit)"
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/schemio-playground-v') && secrets.NPM_TOKEN != ''
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Check that the tag names this package version
+        shell: bash
+        run: |
+          expected="schemio-playground-v$(node -p \"require('./frontend/package.json').version\")"
+          test "$GITHUB_REF_NAME" = "$expected"
+      - name: Install package development dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Publish to npm
+        working-directory: frontend
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --provenance
