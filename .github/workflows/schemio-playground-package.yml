@@ -25,8 +25,8 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
@@ -95,8 +95,8 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
@@ -110,6 +110,8 @@ jobs:
         run: npm run build:playground
       - name: Check that the tracked bundle is current
         run: git diff --exit-code -- frontend/embed-dist
+      - name: Use an npm version that supports trusted publishing
+        run: npm install --global npm@11.5.1
       - name: Publish to npm
         working-directory: frontend
         run: npm publish --access public
