@@ -5,6 +5,7 @@ Copy it when another small teaching widget needs the same React mounting pattern
 */
 
 import CodeMirror from "@uiw/react-codemirror";
+import { EditorView } from "@codemirror/view";
 import { useEffect, useMemo, useState } from "react";
 import { schemeLanguageSupport } from "../features/scheme-workspace/schemeEditor";
 import { analyzeSchemeSource, evaluateMainScheme } from "../features/scheme-workspace/schemeLanguage";
@@ -54,21 +55,26 @@ function formatDiagnostic(line: number, column: number, message: string) {
   return `Line ${line}, column ${column}: ${message}`;
 }
 
+function normaliseInputs(inputNames: string[], values: Record<string, 0 | 1>) {
+  return Object.fromEntries(inputNames.map((name) => [name, values[name] ?? 0])) as Record<string, 0 | 1>;
+}
+
 export function SchemioPlayground({ initialSource, storageKey, persist, readOnly, onSourceChange }: SchemioPlaygroundProps) {
   const [source, setSource] = useState(() => readSavedSource(storageKey, initialSource, persist));
-  const [inputState, setInputState] = useState<Record<string, 0 | 1>>({});
+  const [testCases, setTestCases] = useState<Array<Record<string, 0 | 1>>>([{}]);
   const analysis = useMemo(() => analyzeSchemeSource(source), [source]);
-  const evaluation = useMemo(() => (analysis.isValid ? evaluateMainScheme(source, inputState) : null), [analysis.isValid, inputState, source]);
-  const editorExtensions = useMemo(() => schemeLanguageSupport(), []);
+  const evaluations = useMemo(
+    () => (analysis.isValid ? testCases.map((inputValues) => evaluateMainScheme(source, inputValues)) : []),
+    [analysis.isValid, source, testCases],
+  );
+  const editorExtensions = useMemo(() => [...schemeLanguageSupport(), EditorView.lineWrapping], []);
 
   useEffect(() => {
     setSource(readSavedSource(storageKey, initialSource, persist));
   }, [initialSource, persist, storageKey]);
 
   useEffect(() => {
-    setInputState((current) =>
-      Object.fromEntries(analysis.inputs.map((name) => [name, current[name] ?? 0])) as Record<string, 0 | 1>,
-    );
+    setTestCases((current) => current.map((testCase) => normaliseInputs(analysis.inputs, testCase)));
   }, [analysis.inputs]);
 
   const updateSource = (nextSource: string) => {
@@ -80,6 +86,22 @@ export function SchemioPlayground({ initialSource, storageKey, persist, readOnly
   const resetSource = () => {
     clearSavedSource(storageKey, persist);
     updateSource(initialSource);
+  };
+
+  const addTestCase = () => {
+    setTestCases((current) => [...current, normaliseInputs(analysis.inputs, {})]);
+  };
+
+  const removeTestCase = (index: number) => {
+    setTestCases((current) => current.filter((_, testIndex) => testIndex !== index));
+  };
+
+  const toggleInput = (testIndex: number, name: string) => {
+    setTestCases((current) =>
+      current.map((testCase, index) =>
+        index === testIndex ? { ...testCase, [name]: testCase[name] === 1 ? 0 : 1 } : testCase,
+      ),
+    );
   };
 
   return (
@@ -102,24 +124,22 @@ export function SchemioPlayground({ initialSource, storageKey, persist, readOnly
           basicSetup={{ foldGutter: false, highlightActiveLine: true }}
           editable={!readOnly}
           extensions={editorExtensions}
-          height="340px"
+          minHeight="4.8rem"
           onChange={updateSource}
           value={source}
         />
       </div>
 
-      <section className="schemio-playground__diagnostics" aria-live="polite">
-        <h3>Diagnostics</h3>
-        {analysis.diagnostics.length === 0 ? (
-          <p className="schemio-playground__success">No syntax or structure errors found.</p>
-        ) : (
+      {analysis.diagnostics.length > 0 ? (
+        <section className="schemio-playground__diagnostics" aria-live="polite">
+          <h3>Diagnostics</h3>
           <ul>
             {analysis.diagnostics.map((item, index) => (
               <li key={`${item.line}:${item.column}:${index}`}>{formatDiagnostic(item.line, item.column, item.message)}</li>
             ))}
           </ul>
-        )}
-      </section>
+        </section>
+      ) : null}
 
       <section className="schemio-playground__debugger">
         <div className="schemio-playground__debugger-title">
@@ -129,40 +149,59 @@ export function SchemioPlayground({ initialSource, storageKey, persist, readOnly
         {!analysis.isValid ? (
           <p className="schemio-playground__blocked">Fix the errors before the debugger can run.</p>
         ) : (
-          <div className="schemio-playground__signals">
-            <div>
-              <h4>Inputs</h4>
-              <div className="schemio-playground__signal-list">
-                {analysis.inputs.map((name) => (
-                  <button
-                    aria-label={`${name} ${inputState[name] ?? 0}`}
-                    className={inputState[name] === 1 ? "schemio-playground__bit schemio-playground__bit--on" : "schemio-playground__bit"}
-                    key={name}
-                    onClick={() => setInputState((current) => ({ ...current, [name]: current[name] === 1 ? 0 : 1 }))}
-                    type="button"
-                  >
-                    <span>{name}</span>
-                    <strong>{inputState[name] ?? 0}</strong>
-                  </button>
-                ))}
-              </div>
+          <>
+            <div className="schemio-playground__test-actions">
+              <h4>Test cases</h4>
+              <button className="schemio-playground__add-test" onClick={addTestCase} type="button">
+                Add test
+              </button>
             </div>
-            <div>
-              <h4>Outputs</h4>
-              <div className="schemio-playground__signal-list">
-                {analysis.outputs.map((name) => (
-                  <div aria-label={`${name} ${evaluation?.outputs[name] ?? 0}`} className="schemio-playground__bit schemio-playground__output" key={name}>
-                    <span>{name}</span>
-                    <strong>{evaluation?.outputs[name] ?? 0}</strong>
+            <div className="schemio-playground__test-header" aria-hidden="true">
+              <span>Test</span>
+              <span>Inputs</span>
+              <span>Outputs</span>
+            </div>
+            <div className="schemio-playground__test-list">
+              {testCases.map((testCase, testIndex) => (
+                <div className="schemio-playground__test-case" key={testIndex}>
+                  <span className="schemio-playground__test-number">Test {testIndex + 1}</span>
+                  <div className="schemio-playground__signal-list" aria-label={`Test ${testIndex + 1} inputs`}>
+                    {analysis.inputs.map((name) => (
+                      <button
+                        aria-label={`Test ${testIndex + 1}: ${name} ${testCase[name] ?? 0}`}
+                        className={testCase[name] === 1 ? "schemio-playground__bit schemio-playground__bit--on" : "schemio-playground__bit"}
+                        key={name}
+                        onClick={() => toggleInput(testIndex, name)}
+                        type="button"
+                      >
+                        <span>{name}</span>
+                        <strong>{testCase[name] ?? 0}</strong>
+                      </button>
+                    ))}
                   </div>
-                ))}
-              </div>
+                  <div className="schemio-playground__signal-list" aria-label={`Test ${testIndex + 1} outputs`}>
+                    {analysis.outputs.map((name) => (
+                      <div
+                        aria-label={`Test ${testIndex + 1}: ${name} ${evaluations[testIndex]?.outputs[name] ?? 0}`}
+                        className="schemio-playground__bit schemio-playground__output"
+                        key={name}
+                      >
+                        <span>{name}</span>
+                        <strong>{evaluations[testIndex]?.outputs[name] ?? 0}</strong>
+                      </div>
+                    ))}
+                  </div>
+                  {testCases.length > 1 ? (
+                    <button aria-label={`Remove test ${testIndex + 1}`} className="schemio-playground__remove-test" onClick={() => removeTestCase(testIndex)} type="button">
+                      Remove
+                    </button>
+                  ) : null}
+                </div>
+              ))}
             </div>
-          </div>
+          </>
         )}
       </section>
-
-      <p className="schemio-playground__storage">{persist ? "Your code is saved in this browser." : "Local saving is off."}</p>
     </section>
   );
 }

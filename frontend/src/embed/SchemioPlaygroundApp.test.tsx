@@ -35,17 +35,35 @@ describe("SchemioPlayground", () => {
     window.localStorage.clear();
   });
 
-  it("saves edits locally and shows live output bits", async () => {
+  it("saves edits locally and evaluates separate live test cases", async () => {
     const actor = userEvent.setup();
     renderPlayground();
 
-    await actor.click(await screen.findByRole("button", { name: "a 0" }));
-    expect(screen.getByLabelText("out 1")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Diagnostics" })).not.toBeInTheDocument();
+    await actor.click(await screen.findByRole("button", { name: "Test 1: a 0" }));
+    expect(screen.getByLabelText("Test 1: out 1")).toBeInTheDocument();
+
+    await actor.click(screen.getByRole("button", { name: "Add test" }));
+    expect(screen.getByLabelText("Test 2: out 0")).toBeInTheDocument();
+    await actor.click(screen.getByRole("button", { name: "Test 2: b 0" }));
+    expect(screen.getByLabelText("Test 2: out 1")).toBeInTheDocument();
+    expect(screen.getByLabelText("Test 1: out 1")).toBeInTheDocument();
 
     const editor = screen.getByLabelText("Schemio code editor");
     await actor.clear(editor);
     await actor.type(editor, "scheme () main ():\nend");
     expect(window.localStorage.getItem("test.schemio-playground")).toBe("scheme () main ():\nend");
+  });
+
+  it("shows diagnostics only when the source has an error", async () => {
+    const actor = userEvent.setup();
+    renderPlayground();
+
+    const editor = screen.getByLabelText("Schemio code editor");
+    await actor.clear(editor);
+    await actor.type(editor, "not a scheme");
+    expect(await screen.findByRole("heading", { name: "Diagnostics" })).toBeInTheDocument();
+    expect(screen.getByText(/Expected "scheme"/)).toBeInTheDocument();
   });
 
   it("loads and resets saved code for a stable storage key", async () => {

@@ -27,7 +27,7 @@
 .schemio-playground h2 { font-size: 1.25rem; }
 .schemio-playground h3 { font-size: 1rem; }
 .schemio-playground h4 { color: #cbd5e1; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
-.schemio-playground__header p, .schemio-playground__debugger-title p, .schemio-playground__storage { color: #94a3b8; font-size: .88rem; margin-top: 4px; }
+.schemio-playground__header p, .schemio-playground__debugger-title p { color: #94a3b8; font-size: .88rem; margin-top: 4px; }
 
 .schemio-playground__reset {
   background: #1e293b;
@@ -41,23 +41,33 @@
 
 .schemio-playground__reset:hover { background: #334155; }
 .schemio-playground__editor { border: 1px solid #334155; border-radius: 12px; margin-top: 18px; overflow: hidden; }
+.schemio-playground__editor .cm-editor { height: auto; min-height: 4.8rem; }
+.schemio-playground__editor .cm-scroller { overflow: visible !important; }
+.schemio-playground__editor .cm-content { padding-bottom: 8px; }
 .schemio-playground__diagnostics, .schemio-playground__debugger { background: #172033; border-radius: 12px; margin-top: 16px; padding: 14px; }
 .schemio-playground__diagnostics ul { color: #fecaca; margin: 10px 0 0; padding-left: 20px; }
-.schemio-playground__success { color: #86efac; font-size: .9rem; margin-top: 8px !important; }
 .schemio-playground__blocked { color: #cbd5e1; margin-top: 14px !important; }
 
-.schemio-playground__signals { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 14px; }
-.schemio-playground__signal-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
-.schemio-playground__bit { align-items: center; background: #020617; border: 1px solid #334155; border-radius: 9px; color: #f8fafc; display: flex; flex-direction: column; font: inherit; min-width: 72px; padding: 8px 12px; }
+.schemio-playground__test-actions { align-items: center; display: flex; justify-content: space-between; margin-top: 14px; }
+.schemio-playground__add-test, .schemio-playground__remove-test { background: #1e293b; border: 1px solid #475569; border-radius: 7px; color: #f8fafc; cursor: pointer; font: inherit; font-size: .78rem; padding: 5px 8px; }
+.schemio-playground__add-test:hover, .schemio-playground__remove-test:hover { background: #334155; }
+.schemio-playground__test-header, .schemio-playground__test-case { display: grid; gap: 10px; grid-template-columns: 3.5rem minmax(0, 1fr) minmax(0, 1fr) auto; }
+.schemio-playground__test-header { color: #94a3b8; font-size: .7rem; font-weight: 700; letter-spacing: .07em; margin-top: 12px; text-transform: uppercase; }
+.schemio-playground__test-list { display: grid; gap: 7px; margin-top: 7px; }
+.schemio-playground__test-case { align-items: center; background: #111827; border-radius: 8px; padding: 7px; }
+.schemio-playground__test-number { color: #cbd5e1; font-size: .78rem; font-weight: 600; }
+.schemio-playground__signal-list { display: flex; flex-wrap: wrap; gap: 5px; }
+.schemio-playground__bit { align-items: center; background: #020617; border: 1px solid #334155; border-radius: 6px; color: #f8fafc; display: inline-flex; font: inherit; gap: 6px; min-width: 0; padding: 4px 7px; }
 button.schemio-playground__bit { cursor: pointer; }
 .schemio-playground__bit--on { background: #34d399; border-color: #6ee7b7; color: #052e2b; }
-.schemio-playground__bit span { font-size: .75rem; opacity: .72; }
-.schemio-playground__bit strong { font-size: 1.3rem; }
+.schemio-playground__bit span { font-size: .72rem; opacity: .72; }
+.schemio-playground__bit strong { font-size: .9rem; }
 .schemio-playground__output { background: #111827; }
-.schemio-playground__storage { margin-top: 14px !important; }
 
 @media (max-width: 600px) {
   .schemio-playground { border-radius: 12px; padding: 14px; }
   .schemio-playground__header, .schemio-playground__debugger-title { flex-direction: column; }
-  .schemio-playground__signals { grid-template-columns: 1fr; }
+  .schemio-playground__test-header { display: none; }
+  .schemio-playground__test-case { grid-template-columns: 1fr; }
+  .schemio-playground__signal-list::before { color: #94a3b8; content: attr(aria-label); font-size: .7rem; width: 100%; }
 }
