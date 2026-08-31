@@ -2,7 +2,8 @@
 
 This package registers a lazy-loaded `<schemio-playground>` custom element. It
 contains a Schemio editor, error diagnostics, a live debugger with several
-independent test cases, and optional browser-local saving.
+independent test cases, an animated signal visualizer, and optional
+browser-local saving.
 
 Edit this file when the package API, installation command, or release process
 changes. Copy it when another standalone web component needs a short package

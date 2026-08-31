@@ -4,7 +4,7 @@ Edit it when the embedded editor or debugger behavior changes.
 Copy it when another browser-only learning widget needs a focused UI test.
 */
 
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SchemioPlayground } from "./SchemioPlaygroundApp";
@@ -50,8 +50,7 @@ describe("SchemioPlayground", () => {
     expect(screen.getByLabelText("Test 1: out 1")).toBeInTheDocument();
 
     const editor = screen.getByLabelText("Schemio code editor");
-    await actor.clear(editor);
-    await actor.type(editor, "scheme () main ():\nend");
+    fireEvent.change(editor, { target: { value: "scheme () main ():\nend" } });
     expect(window.localStorage.getItem("test.schemio-playground")).toBe("scheme () main ():\nend");
   });
 
@@ -64,6 +63,29 @@ describe("SchemioPlayground", () => {
     await actor.type(editor, "not a scheme");
     expect(await screen.findByRole("heading", { name: "Diagnostics" })).toBeInTheDocument();
     expect(screen.getByText(/Expected "scheme"/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Visualize test/ })).not.toBeInTheDocument();
+  });
+
+  it("opens a black signal diagram and animates the selected test", () => {
+    vi.useFakeTimers();
+    const { container } = renderPlayground();
+
+    fireEvent.click(screen.getByRole("button", { name: "Visualize test 1" }));
+    expect(screen.getByRole("dialog", { name: "Signal visualizer for Test 1" })).toBeInTheDocument();
+    expect(container.querySelectorAll(".schemio-visualizer__wire--active")).toHaveLength(0);
+
+    fireEvent.click(screen.getByRole("button", { name: "Simulate" }));
+    act(() => vi.advanceTimersByTime(599));
+    expect(container.querySelectorAll(".schemio-visualizer__wire--active").length).toBeGreaterThan(0);
+    expect(container.querySelector('g[data-node-kind="output"] rect')?.getAttribute("fill")).toBe("#101827");
+    act(() => vi.advanceTimersByTime(1));
+    expect(container.querySelector('g[data-node-kind="output"] rect')?.getAttribute("fill")).toBe("#f87171");
+
+    fireEvent.click(screen.getByRole("button", { name: "Reset" }));
+    expect(container.querySelectorAll(".schemio-visualizer__wire--active")).toHaveLength(0);
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("dialog", { name: "Signal visualizer for Test 1" })).not.toBeInTheDocument();
+    vi.useRealTimers();
   });
 
   it("loads and resets saved code for a stable storage key", async () => {

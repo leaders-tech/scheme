@@ -9,6 +9,8 @@ import { EditorView } from "@codemirror/view";
 import { useEffect, useMemo, useState } from "react";
 import { schemeLanguageSupport } from "../features/scheme-workspace/schemeEditor";
 import { analyzeSchemeSource, evaluateMainScheme } from "../features/scheme-workspace/schemeLanguage";
+import { buildSchemeVisualization, type SignalValue } from "../features/scheme-workspace/schemeVisualizer";
+import { SchemioSignalVisualizer } from "./SchemioSignalVisualizer";
 
 export type SchemioPlaygroundProps = {
   initialSource: string;
@@ -62,7 +64,9 @@ function normaliseInputs(inputNames: string[], values: Record<string, 0 | 1>) {
 export function SchemioPlayground({ initialSource, storageKey, persist, readOnly, onSourceChange }: SchemioPlaygroundProps) {
   const [source, setSource] = useState(() => readSavedSource(storageKey, initialSource, persist));
   const [testCases, setTestCases] = useState<Array<Record<string, 0 | 1>>>([{}]);
+  const [visualizedTest, setVisualizedTest] = useState<{ inputs: Record<string, SignalValue>; name: string } | null>(null);
   const analysis = useMemo(() => analyzeSchemeSource(source), [source]);
+  const visualModel = useMemo(() => (analysis.isValid ? buildSchemeVisualization(source) : null), [analysis.isValid, source]);
   const evaluations = useMemo(
     () => (analysis.isValid ? testCases.map((inputValues) => evaluateMainScheme(source, inputValues)) : []),
     [analysis.isValid, source, testCases],
@@ -196,12 +200,25 @@ export function SchemioPlayground({ initialSource, storageKey, persist, readOnly
                       Remove
                     </button>
                   ) : null}
+                  {visualModel ? (
+                    <button
+                      aria-label={`Visualize test ${testIndex + 1}`}
+                      className="schemio-playground__visualize-test"
+                      onClick={() => setVisualizedTest({ inputs: normaliseInputs(analysis.inputs, testCase), name: `Test ${testIndex + 1}` })}
+                      type="button"
+                    >
+                      Visualize
+                    </button>
+                  ) : null}
                 </div>
               ))}
             </div>
           </>
         )}
       </section>
+      {visualizedTest && visualModel ? (
+        <SchemioSignalVisualizer inputs={visualizedTest.inputs} model={visualModel} onClose={() => setVisualizedTest(null)} testName={visualizedTest.name} />
+      ) : null}
     </section>
   );
 }

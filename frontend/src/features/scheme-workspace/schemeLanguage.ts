@@ -17,7 +17,7 @@ type Token = {
   to: number;
 };
 
-type SignalRef = {
+export type SignalRef = {
   name: string;
   line: number;
   column: number;
@@ -25,7 +25,7 @@ type SignalRef = {
   to: number;
 };
 
-type SignalList = {
+export type SignalList = {
   items: SignalRef[];
   line: number;
   column: number;
@@ -33,13 +33,13 @@ type SignalList = {
   to: number;
 };
 
-type StatementNode = {
+export type StatementNode = {
   inputs: SignalList;
   callee: SignalRef;
   outputs: SignalList;
 };
 
-type SchemeNode = {
+export type SchemeNode = {
   name: SignalRef;
   inputs: SignalList;
   outputs: SignalList;
@@ -49,7 +49,7 @@ type SchemeNode = {
   end: number;
 };
 
-type ParsedFile = {
+export type ParsedFile = {
   schemes: SchemeNode[];
 };
 
@@ -599,6 +599,11 @@ export function analyzeSchemeSource(source: string): AnalysisWithAst {
     return { mainSchemeName: null, inputs: [], outputs: [], diagnostics: [parsed.diagnostic], isValid: false, parsed: null };
   }
   return analyzeParsed(parsed.parsed);
+}
+
+export function getValidParsedScheme(source: string): ParsedFile | null {
+  const analysis = analyzeSchemeSource(source);
+  return analysis.isValid ? analysis.parsed : null;
 }
 
 function buildEditorSchemesFromParsed(parsed: ParsedFile): EditorSchemeSymbols[] {

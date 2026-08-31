@@ -3,7 +3,7 @@
 # Copy its simple dependency-free setup when you add another standalone tool.
 [package]
 name = "schemio"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 description = "A small command-line interpreter for the Schemio teaching language"
 license = "MIT"

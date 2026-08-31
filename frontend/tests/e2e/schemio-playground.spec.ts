@@ -39,6 +39,25 @@ test("standalone playground restores code and evaluates separate test cases", as
   await playground.getByRole("button", { name: "Add test" }).click();
   await playground.getByRole("button", { name: "Test 2: b 0" }).click();
   await expect(playground.getByLabel("Test 2: out 1")).toBeVisible();
+  await playground.getByRole("button", { name: "Visualize test 1" }).click();
+  const visualizer = playground.getByRole("dialog", { name: "Signal visualizer for Test 1" });
+  await expect(visualizer).toBeVisible();
+  const canvas = visualizer.locator("svg");
+  const diagram = canvas.locator("g").first();
+  const fittedTransform = await diagram.getAttribute("transform");
+  await canvas.hover({ position: { x: 120, y: 120 } });
+  await page.mouse.wheel(0, -200);
+  await expect.poll(() => diagram.getAttribute("transform")).not.toBe(fittedTransform);
+  const zoomedTransform = await diagram.getAttribute("transform");
+  await canvas.dragTo(canvas, { sourcePosition: { x: 160, y: 180 }, targetPosition: { x: 240, y: 220 } });
+  await expect.poll(() => diagram.getAttribute("transform")).not.toBe(zoomedTransform);
+  await visualizer.getByRole("button", { name: "Fit diagram" }).click();
+  await expect.poll(() => diagram.getAttribute("transform")).toBe(fittedTransform);
+  await visualizer.getByRole("button", { name: "Simulate" }).click();
+  await expect.poll(() => canvas.locator(".schemio-visualizer__wire--active").count()).toBeGreaterThan(0);
+  await expect.poll(() => canvas.locator('g[data-node-kind="output"] rect[fill="#4ade80"], g[data-node-kind="output"] rect[fill="#f87171"]').count()).toBeGreaterThan(0);
+  await visualizer.getByRole("button", { name: "Close" }).click();
+  await expect(visualizer).toHaveCount(0);
   const initialEditor = await playground.evaluate((element) => {
     const editor = element.shadowRoot?.querySelector(".cm-editor") as HTMLElement;
     const scroller = element.shadowRoot?.querySelector(".cm-scroller") as HTMLElement;

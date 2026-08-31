@@ -53,12 +53,12 @@ script directory is not `/home/ejudge/compile/scripts`, replace
 
    ```bash
    sudo install -d /opt/ejudge
-   sudo install -m 755 schemio-schemio-v0.1.1-x86_64-unknown-linux-gnu/schemio /opt/ejudge/schemio
+   sudo install -m 755 schemio-schemio-v0.1.2-x86_64-unknown-linux-gnu/schemio /opt/ejudge/schemio
    /opt/ejudge/schemio --version
    ```
 
    Use the directory name from the release that you downloaded; the example
-   above is for version 0.1.1.
+   above is for version 0.1.2.
 
 2. Copy the templates into Ejudge's local template directory. They must be
    readable by the `ejudge` user:
