@@ -32,6 +32,9 @@ test("standalone playground restores code and evaluates separate test cases", as
       { message: browserErrors.join("\n"), timeout: 15_000 },
     )
     .toContain("Schemio playground");
+  await expect
+    .poll(() => playground.evaluate((element) => element.shadowRoot?.querySelector(".cm-line")?.textContent ?? ""))
+    .toBe("scheme (a b) xor (out):");
   expect(browserErrors, failedResponses.join("\n")).toEqual([]);
   await expect(playground.getByRole("heading", { name: "Diagnostics" })).toHaveCount(0);
   await playground.getByRole("button", { name: "Test 1: a 0" }).click();

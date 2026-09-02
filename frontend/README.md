@@ -41,20 +41,21 @@ Then put the element in a page or a framework template:
 ```html
 <schemio-playground storage-key="cs0040-prob-a-xor">
   <script type="text/plain">
-scheme (a b) xor (out):
- local either both not_both
- (a b) or (either)
- (a b) and (both)
- (both) not (not_both)
- (either not_both) and (out)
-end
+    scheme (a b) xor (out):
+     local either both not_both
+     (a b) or (either)
+     (a b) and (both)
+     (both) not (not_both)
+     (either not_both) and (out)
+    end
   </script>
 </schemio-playground>
 ```
 
 `storage-key` is strongly recommended: the user's code is saved under that
 key in `localStorage`. Add `storage="off"` to disable saving, or `readonly` to
-show a non-editable program.
+show a non-editable program. The shared indentation inside `script` is removed,
+so the program can be aligned neatly with the surrounding HTML.
 
 The element dispatches a bubbling `schemio-change` event after every edit. Its
 `event.detail` contains `{ source, isValid }`.
@@ -85,7 +86,7 @@ The archive includes its own `README.md` with the complete copy-paste example.
 
 The GitHub Actions workflow publishes the package after a tag named
 `schemio-playground-v<package version>` is pushed, for example
-`schemio-playground-v0.1.4`. It first runs the tests, builds the package, and
+`schemio-playground-v0.1.5`. It first runs the tests, builds the package, and
 installs the resulting tarball with pnpm.
 
 For the same tag, it also attaches a browser-ready archive and SHA-256 checksum

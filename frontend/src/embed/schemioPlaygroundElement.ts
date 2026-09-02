@@ -27,10 +27,26 @@ type MountPlayground = (host: HTMLElement, options: {
   onSourceChange: (source: string, isValid: boolean) => void;
 }) => PlaygroundMount;
 
+export function normaliseEmbeddedSource(source: string) {
+  const lines = source.replace(/\r\n?/g, "\n").split("\n");
+  while (lines[0]?.trim() === "") {
+    lines.shift();
+  }
+  while (lines.at(-1)?.trim() === "") {
+    lines.pop();
+  }
+  const nonEmptyLines = lines.filter((line) => line.trim() !== "");
+  if (nonEmptyLines.length === 0) {
+    return "";
+  }
+  const commonIndent = Math.min(...nonEmptyLines.map((line) => line.match(/^[ \t]*/)?.[0].length ?? 0));
+  return `${lines.map((line) => (line.trim() === "" ? "" : line.slice(commonIndent))).join("\n")}\n`;
+}
+
 function sourceFromElement(element: HTMLElement) {
   const sourceNode = element.querySelector(':scope > script[type="text/plain"]');
   if (sourceNode?.textContent) {
-    return sourceNode.textContent.replace(/^\s*\n/, "").trimEnd() + "\n";
+    return normaliseEmbeddedSource(sourceNode.textContent) || DEFAULT_SOURCE;
   }
   return DEFAULT_SOURCE;
 }

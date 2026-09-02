@@ -6,15 +6,30 @@ const a = ":host{color:#e2e8f0;display:block;font-family:Segoe UI,Helvetica Neue
  (either not_both) and (out)
 end
 `;
-function d(r) {
-  const e = r.querySelector(':scope > script[type="text/plain"]');
-  return e?.textContent ? e.textContent.replace(/^\s*\n/, "").trimEnd() + `
-` : n;
+function l(t) {
+  const e = t.replace(/\r\n?/g, `
+`).split(`
+`);
+  for (; e[0]?.trim() === ""; )
+    e.shift();
+  for (; e.at(-1)?.trim() === ""; )
+    e.pop();
+  const i = e.filter((o) => o.trim() !== "");
+  if (i.length === 0)
+    return "";
+  const s = Math.min(...i.map((o) => o.match(/^[ \t]*/)?.[0].length ?? 0));
+  return `${e.map((o) => o.trim() === "" ? "" : o.slice(s)).join(`
+`)}
+`;
 }
-function l(r) {
-  return Array.from(document.querySelectorAll("schemio-playground")).indexOf(r);
+function d(t) {
+  const e = t.querySelector(':scope > script[type="text/plain"]');
+  return e?.textContent && l(e.textContent) || n;
 }
-class c extends HTMLElement {
+function c(t) {
+  return Array.from(document.querySelectorAll("schemio-playground")).indexOf(t);
+}
+class p extends HTMLElement {
   cleanup = null;
   host = null;
   observer = null;
@@ -23,16 +38,16 @@ class c extends HTMLElement {
     if (this.loaded)
       return;
     if (!this.shadowRoot) {
-      const t = this.attachShadow({ mode: "open" }), i = document.createElement("style");
-      i.textContent = a, this.host = document.createElement("div"), t.append(i, this.host);
+      const o = this.attachShadow({ mode: "open" }), r = document.createElement("style");
+      r.textContent = a, this.host = document.createElement("div"), o.append(r, this.host);
     }
     const e = this.host;
     e.textContent = "Loading Schemio playground…";
-    const o = () => {
+    const i = () => {
       this.loaded || (this.loaded = !0, this.observer?.disconnect(), this.mount(e));
     };
-    this.getBoundingClientRect().top <= window.innerHeight + 320 || !("IntersectionObserver" in window) ? o() : (this.observer = new IntersectionObserver((t) => {
-      t.some((i) => i.isIntersecting) && o();
+    this.getBoundingClientRect().top <= window.innerHeight + 320 || !("IntersectionObserver" in window) ? i() : (this.observer = new IntersectionObserver((o) => {
+      o.some((r) => r.isIntersecting) && i();
     }, { rootMargin: "320px" }), this.observer.observe(this));
   }
   disconnectedCallback() {
@@ -40,19 +55,22 @@ class c extends HTMLElement {
   }
   async mount(e) {
     try {
-      const { mountSchemioPlayground: o } = await import("./chunks/SchemioPlaygroundMount-CHV3XjGt.js"), s = this.getAttribute("storage-key") ?? `schemio-playground:${window.location.pathname}:${this.id || l(this)}`;
-      this.cleanup = o(e, {
+      const { mountSchemioPlayground: i } = await import("./chunks/SchemioPlaygroundMount-CHV3XjGt.js"), s = this.getAttribute("storage-key") ?? `schemio-playground:${window.location.pathname}:${this.id || c(this)}`;
+      this.cleanup = i(e, {
         initialSource: d(this),
         storageKey: s,
         persist: this.getAttribute("storage") !== "off",
         readOnly: this.hasAttribute("readonly"),
-        onSourceChange: (t, i) => {
-          this.dispatchEvent(new CustomEvent("schemio-change", { bubbles: !0, composed: !0, detail: { source: t, isValid: i } }));
+        onSourceChange: (o, r) => {
+          this.dispatchEvent(new CustomEvent("schemio-change", { bubbles: !0, composed: !0, detail: { source: o, isValid: r } }));
         }
       }).unmount;
-    } catch (o) {
-      e.textContent = "Schemio playground could not load. Please reload the page.", console.error("Could not load the Schemio playground.", o);
+    } catch (i) {
+      e.textContent = "Schemio playground could not load. Please reload the page.", console.error("Could not load the Schemio playground.", i);
     }
   }
 }
-customElements.get("schemio-playground") || customElements.define("schemio-playground", c);
+customElements.get("schemio-playground") || customElements.define("schemio-playground", p);
+export {
+  l as normaliseEmbeddedSource
+};
